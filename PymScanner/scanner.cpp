@@ -19,8 +19,3 @@ std::list<Token> scanner(const char* fileName)
 	tokenList.emplace_back(TokenType::FEOF, ""s);
 	return tokenList;
 }
-
-Token dfa(const char* str, size_t* start_pos)
-{
-	return Token(TokenType::AND, ""s);
-}

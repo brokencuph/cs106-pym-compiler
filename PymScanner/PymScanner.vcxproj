@@ -139,12 +139,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dfa.cpp" />
     <ClCompile Include="scanner.cpp" />
     <ClCompile Include="scanner_driver.cpp" />
     <ClCompile Include="token.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dfa.h" />
     <ClInclude Include="scanner.h" />
     <ClInclude Include="token.h" />
     <ClInclude Include="utils.h" />

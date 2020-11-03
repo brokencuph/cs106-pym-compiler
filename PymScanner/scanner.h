@@ -7,6 +7,4 @@
 
 std::list<Token> scanner(const char* fileName);
 
-Token dfa(const char* str, size_t* start_pos);
-
 #endif

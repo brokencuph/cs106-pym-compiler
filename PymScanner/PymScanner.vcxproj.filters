@@ -27,6 +27,9 @@
     <ClCompile Include="scanner_driver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="dfa.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="token.h">
@@ -36,6 +39,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dfa.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

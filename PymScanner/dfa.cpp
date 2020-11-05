@@ -2,12 +2,14 @@
 #include <string>
 #include <cctype>
 #include <unordered_map>
+#include <stack>
 #include "dfa.h"
 
 
 using namespace std::string_literals;
 
 using std::string;
+using std::stack;
 
 static State currentState = State::START;
 
@@ -15,7 +17,7 @@ static void (*transfers[16])(char);
 
 static size_t currentPos;
 
-static Token currentToken;
+static Token currentToken(TokenType::ERROR, ""s, 1);
 
 static int currentLine;
 
@@ -32,29 +34,11 @@ static std::unordered_map<std::string, TokenType> keywordsMap = { {"if", TokenTy
 	{"num",TokenType::NUM},
 	{"str",TokenType::STR}
 };
-	
-void initDfa()
-{
-	currentState = State::START;
-	currentPos = 0;
-	currentLine = 1;
 
-	// create function table
-	transfers[(int)State::START] = transferStart;
-	transfers[(int)State::START_NEWLINE] = transferStartNewline;
-	transfers[(int)State::DONE] = transferDone;
-	transfers[(int)State::NOT_DONE] = transferNotDone;
-	transfers[(int)State::IN_NUM_1] = transferNum1;
-	transfers[(int)State::IN_NUM_2] = transferNum2;
-	transfers[(int)State::IN_ID] = transferId;
-	transfers[(int)State::IN_STR] = transferStr;
-	transfers[(int)State::READ_GT] = transferGt;
-	transfers[(int)State::READ_LT] = transferLt;
-	transfers[(int)State::READ_EQ] = transferEq;
-	transfers[(int)State::READ_NEQ] = transferNeq;
-	transfers[(int)State::READ_MINUS] = transferMinus;
-	transfers[(int)State::IN_COMMENT] = transferComment;
-}
+static stack<int> stIndent;
+
+static bool startFromNewLine = true;
+	
 
 static void changeToken(std::string&& str, TokenType tk, State nextState)
 {
@@ -128,6 +112,7 @@ static void transferStart(char ch)
 		break;
 	case '\n':
 		changeToken(""s, TokenType::NEWLINE, State::START_NEWLINE);
+		currentLine++;
 		break;
 	case ' ':
 		break;
@@ -137,9 +122,72 @@ static void transferStart(char ch)
 	}
 }
 
+static int indentNum = 0;
+
 static void transferStartNewline(char ch)
 {
+	if (ch == ' ')
+	{
+		changeToken(""s, TokenType::INDENT, State::IN_INDENT);
+		indentNum = 1;
+		return;
+	}
+	else
+	{
+		const int indentNum = 0;
+		changeToken(string(1, '\0'), TokenType::DEDENT, State::NOT_DONE);
+		if (indentNum < stIndent.top())
+		{
+			
+			while (stIndent.top() > indentNum)
+			{
+				stIndent.pop();
+				currentToken.str[0]++; // use str[0] as the token count
+			}
+			if (stIndent.top() < indentNum)
+			{
+				changeToken("Wrong indentation"s, TokenType::ERROR, State::ERROR);
+				return;
+			}
+		}
+	}
+}
 
+static void transferIndent(char ch)
+{
+	if (ch == ' ')
+	{
+		indentNum++;
+		return;
+	}
+	else
+	{
+		if (currentLine == 1 && indentNum > 0)
+		{
+			changeToken("The first line is indented."s, TokenType::ERROR, State::ERROR);
+			return;
+		}
+		if (indentNum > stIndent.top())
+		{
+			stIndent.push(indentNum);
+			changeToken(""s, TokenType::INDENT, State::NOT_DONE);
+			return;
+		}
+		else if (indentNum < stIndent.top())
+		{
+			changeToken("\0"s, TokenType::DEDENT, State::NOT_DONE);
+			while (stIndent.top() > indentNum)
+			{
+				stIndent.pop();
+				currentToken.str[0]++; // use str[0] as the token count
+			}
+			if (stIndent.top() < indentNum)
+			{
+				changeToken("Wrong indentation"s, TokenType::ERROR, State::ERROR);
+				return;
+			}
+		}
+	}
 }
 
 static void transferDone(char ch)
@@ -286,8 +334,46 @@ static void transferComment(char ch)
 	
 }
 
+void initDfa()
+{
+	currentState = State::START;
+	currentPos = 0;
+	currentLine = 1;
+
+	startFromNewLine = true;
+
+	stIndent.push(0);
+
+	// create function table
+	transfers[(int)State::START] = transferStart;
+	transfers[(int)State::START_NEWLINE] = transferStartNewline;
+	transfers[(int)State::DONE] = transferDone;
+	transfers[(int)State::NOT_DONE] = transferNotDone;
+	transfers[(int)State::IN_NUM_1] = transferNum1;
+	transfers[(int)State::IN_NUM_2] = transferNum2;
+	transfers[(int)State::IN_ID] = transferId;
+	transfers[(int)State::IN_STR] = transferStr;
+	transfers[(int)State::READ_GT] = transferGt;
+	transfers[(int)State::READ_LT] = transferLt;
+	transfers[(int)State::READ_EQ] = transferEq;
+	transfers[(int)State::READ_NEQ] = transferNeq;
+	transfers[(int)State::READ_MINUS] = transferMinus;
+	transfers[(int)State::IN_COMMENT] = transferComment;
+	transfers[(int)State::IN_INDENT] = transferIndent;
+}
+
+
 Token dfa(const char* str)
 {
+	if (startFromNewLine)
+	{
+		currentState = State::START_NEWLINE;
+		startFromNewLine = false;
+	}
+	else
+	{
+		currentState = State::START;
+	}
 	// do state transfer by looking up the function table
 	while (true)
 	{
@@ -302,6 +388,7 @@ Token dfa(const char* str)
 		case State::ERROR:
 			return currentToken;
 		case State::START_NEWLINE:
+			startFromNewLine = true;
 			return currentToken;
 		default:
 			break;

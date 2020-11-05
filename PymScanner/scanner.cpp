@@ -1,5 +1,7 @@
 #include "scanner.h"
+#include "token.h"
 #include "utils.h"
+#include "dfa.h"
 
 using namespace std::string_literals;
 
@@ -9,13 +11,24 @@ std::list<Token> scanner(const char* fileName)
 {
 	const std::string fileContent = pym_utils::readFromFile(fileName);
 	const char* str = fileContent.c_str();
-	size_t pos = 0u;
 	std::list<Token> tokenList;
-	while (str[pos] != '\0')
+	initDfa();
+	while (true)
 	{
-		Token tmp = dfa(str, &pos);
+		Token tmp = dfa(str);
+		if (tmp.type == TokenType::DEDENT)
+		{
+			for (size_t i = 0; i < tmp.str[0]; i++)
+			{
+				tokenList.emplace_back(TokenType::DEDENT, ""s, tmp.line);
+			}
+			continue;
+		}
 		tokenList.push_back(tmp);
+		if (tmp.type == TokenType::FEOF)
+		{
+			break;
+		}
 	}
-	tokenList.emplace_back(TokenType::FEOF, ""s);
 	return tokenList;
 }

@@ -10,7 +10,6 @@ enum class TokenType // use enum class instead of enum to avoid name collision
 	LPR, RPR, LBR, RBR, // delimiters
 	ASSI, // assignment
 	GT, LT, GE, LE, EQ, NEQ, // relational operators
-	AND, OR, NOT, // logical operators
 	INDENT, DEDENT, // tokens relevant to indentation
 	NEWLINE, FEOF, // controling tokens
 	ERROR, // error token
@@ -26,6 +25,8 @@ struct Token
 	int line;
 
 	Token(TokenType _type, std::string _str, int line);
+
+	friend std::ostream& operator<<(std::ostream& os, const Token& tk);
 };
 
 #endif

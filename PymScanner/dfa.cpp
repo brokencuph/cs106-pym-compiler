@@ -1,9 +1,12 @@
 
 #include <string>
+#include <cctype>
 #include "dfa.h"
 
 
 using namespace std::string_literals;
+
+using std::string;
 
 static State currentState = State::START;
 
@@ -38,9 +41,85 @@ void initDfa()
 	transfers[(int)State::IN_COMMENT] = transferComment;
 }
 
+static void changeToken(std::string&& str, TokenType tk, State nextState)
+{
+	currentToken = Token(tk, std::move(str), currentLine);
+	currentState = nextState;
+}
+
 static void transferStart(char ch)
 {
-
+	if (isdigit(ch))
+	{
+		changeToken(string(1, ch), TokenType::NUMBER, State::IN_NUM_1);
+		return;
+	}
+	if (isalpha(ch) || ch == '_')
+	{
+		changeToken(string(1, ch), TokenType::ID, State::IN_ID);
+		return;
+	}
+	switch (ch)
+	{
+	case '>':
+		changeToken(""s, TokenType::GT, State::READ_GT);
+		break;
+	case '<':
+		changeToken(""s, TokenType::LT, State::READ_LT);
+		break;
+	case '-':
+		changeToken(""s, TokenType::MINUS, State::READ_MINUS);
+		break;
+	case '=':
+		changeToken(""s, TokenType::ASSI, State::READ_EQ);
+		break;
+	case '!':
+		changeToken(""s, TokenType::NEQ, State::READ_NEQ);
+		break;
+	case '#':
+		changeToken(""s, TokenType::CHARS, State::IN_COMMENT);
+		break;
+	case '+':
+		changeToken(""s, TokenType::PLUS, State::DONE);
+		break;
+	case '*':
+		changeToken(""s, TokenType::MUL, State::DONE);
+		break;
+	case '/':
+		changeToken(""s, TokenType::DIV, State::DONE);
+		break;
+	case '(':
+		changeToken(""s, TokenType::LPR, State::DONE);
+		break;
+	case ')':
+		changeToken(""s, TokenType::RPR, State::DONE);
+		break;
+	case '[':
+		changeToken(""s, TokenType::LBR, State::DONE);
+		break;
+	case ']':
+		changeToken(""s, TokenType::RBR, State::DONE);
+		break;
+	case '"':
+		changeToken("\""s, TokenType::CHARS, State::IN_STR);
+		break;
+	case ',':
+		changeToken(""s, TokenType::COMMA, State::DONE);
+		break;
+	case ':':
+		changeToken(""s, TokenType::COLON, State::DONE);
+	case '\0':
+		changeToken(""s, TokenType::FEOF, State::DONE);
+		break;
+	case '\n':
+		changeToken(""s, TokenType::NEWLINE, State::START_NEWLINE);
+		break;
+	case ' ':
+		break;
+	default:
+		changeToken("Expected a valid token"s, TokenType::ERROR, State::ERROR);
+		break;
+	}
 }
 
 static void transferStartNewline(char ch)
@@ -114,13 +193,16 @@ Token dfa(const char* str)
 	while (true)
 	{
 		transfers[(int)currentState](str[currentPos]);
+		currentPos++;
 		switch (currentState)
 		{
 		case State::DONE:
-			currentPos++;
 			return currentToken;
 		case State::NOT_DONE:
+			currentPos--;
 		case State::ERROR:
+			return currentToken;
+		case State::START_NEWLINE:
 			return currentToken;
 		default:
 			break;

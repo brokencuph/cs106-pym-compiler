@@ -5,6 +5,7 @@
 
 enum class TokenType // use enum class instead of enum to avoid name collision
 {
+	ID,
 	NUMBER, CHARS, // Literals
 	PLUS, MINUS, MUL, DIV, MOD, // math operators
 	LPR, RPR, LBR, RBR, // delimiters
@@ -13,7 +14,8 @@ enum class TokenType // use enum class instead of enum to avoid name collision
 	AND, OR, NOT, // logical operators
 	INDENT, DEDENT, // tokens relevant to indentation
 	NEWLINE, FEOF, // controling tokens
-	ERROR // error token
+	ERROR, // error token
+	COMMA, COLON
 };
 
 struct Token

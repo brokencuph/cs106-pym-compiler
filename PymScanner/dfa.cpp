@@ -7,7 +7,7 @@ using namespace std::string_literals;
 
 static State currentState = State::START;
 
-static void (*transfers[13])(char);
+static void (*transfers[16])(char);
 
 static size_t currentPos;
 

@@ -1,6 +1,5 @@
 #ifndef TOKENLIST_H_
 #define TOKENLIST_H_
-
 #include <string>
 
 enum class TokenType // use enum class instead of enum to avoid name collision
@@ -15,7 +14,9 @@ enum class TokenType // use enum class instead of enum to avoid name collision
 	INDENT, DEDENT, // tokens relevant to indentation
 	NEWLINE, FEOF, // controling tokens
 	ERROR, // error token
-	COMMA, COLON
+	COMMA, COLON,//, ;
+	IF, ELSE, ELIF, WHILE, DEF, RETURN, AND, OR, NOT,INT, NUM, STR,//keywords
+	ARROW
 };
 
 struct Token

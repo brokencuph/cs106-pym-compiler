@@ -1,6 +1,7 @@
 
 #include <string>
 #include <cctype>
+#include <unordered_map>
 #include "dfa.h"
 
 
@@ -18,6 +19,20 @@ static Token currentToken;
 
 static int currentLine;
 
+static std::unordered_map<std::string, TokenType> keywordsMap = { {"if", TokenType::IF},
+	{"else",TokenType::ELSE},
+	{"elif",TokenType::ELIF},
+	{"while",TokenType::WHILE},
+	{"def",TokenType::DEF},
+	{"return",TokenType::RETURN},
+	{"and",TokenType::AND},
+	{"or",TokenType::OR},
+	{"not",TokenType::NOT},
+	{"int",TokenType::INT},
+	{"num",TokenType::NUM},
+	{"str",TokenType::STR}
+};
+	
 void initDfa()
 {
 	currentState = State::START;
@@ -139,17 +154,48 @@ static void transferNotDone(char ch)
 
 static void transferNum1(char ch)
 {
-
+	if (isdigit(ch))
+	{
+		currentToken.str.append(1, ch);
+		return;
+	}
+	else if (ch == '\\')
+	{
+		currentState = State::IN_NUM_2;
+		currentToken.str.append(1, ch);
+	}
+	else
+		currentState = State::NOT_DONE;
 }
 
 static void transferNum2(char ch)
 {
-
+	if (isdigit(ch))
+	{
+		currentToken.str.append(1, ch);
+		return;
+	}
+	else
+		currentState = State::NOT_DONE;
 }
 
 static void transferId(char ch)
 {
-
+	if (isalnum(ch) || ch=='_') 
+	{
+		currentToken.str.append(1, ch);
+		auto it = keywordsMap.find(currentToken.str);
+		if (it == keywordsMap.end())
+			currentToken.type = TokenType::ID;
+		else
+			currentToken.type = it->second;
+		return;
+	}
+	else {
+		if (currentToken.type != TokenType::ID)
+			currentToken.str.clear();
+		currentState = State::NOT_DONE;
+	}
 }
 
 static void transferStr(char ch)
@@ -159,32 +205,74 @@ static void transferStr(char ch)
 
 static void transferGt(char ch)
 {
+	if (ch == '=') {
+		currentToken.type = TokenType::GE;
+		currentState = State::DONE;
+	}
+	else {
+		currentState = State::NOT_DONE;
+	}
 
 }
 
 static void transferLt(char ch)
 {
-
+	if (ch == '=') {
+		currentToken.type = TokenType::LE;
+		currentState = State::DONE;
+	}
+	else {
+		currentState = State::NOT_DONE;
+	}
 }
 
 static void transferEq(char ch)
 {
-
+	if (ch == '=') {
+		currentToken.type = TokenType::EQ;
+		currentState = State::DONE;
+	}
+	else {
+		currentState = State::NOT_DONE;
+	}
 }
 
 static void transferNeq(char ch)
 {
-
+	if (ch == '=') {
+		currentToken.type = TokenType::NEQ;
+		currentState = State::DONE;
+	}
+	else {
+		currentToken.type = TokenType::ERROR;
+		currentToken.str = "unexpected '"s + ch + "'"s;
+		currentState = State::ERROR;
+	}
 }
 
 static void transferMinus(char ch)
 {
 
+	if (ch == '>') {
+		currentToken.type = TokenType::ARROW;
+		currentState = State::DONE;
+	}
+	else {
+		currentState = State::NOT_DONE;
+	}
 }
 
 static void transferComment(char ch)
 {
-
+	if (ch == '\n') {
+		currentToken.type = TokenType::NEWLINE;
+		currentState = State::DONE;
+	}
+	else if (ch == '\0') {
+		currentToken.type = TokenType::FEOF;
+		currentState = State::DONE;
+	}
+	
 }
 
 Token dfa(const char* str)

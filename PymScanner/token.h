@@ -13,14 +13,16 @@ enum class TokenType // use enum class instead of enum to avoid name collision
 	AND, OR, NOT, // logical operators
 	INDENT, DEDENT, // tokens relevant to indentation
 	NEWLINE, FEOF, // controling tokens
+	ERROR // error token
 };
 
 struct Token
 {
 	TokenType type;
 	std::string str; // use std::string as the character storage
+	int line;
 
-	Token(TokenType _type, std::string _str);
+	Token(TokenType _type, std::string _str, int line);
 };
 
 #endif

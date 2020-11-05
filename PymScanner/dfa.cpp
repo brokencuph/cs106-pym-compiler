@@ -13,13 +13,17 @@ static size_t currentPos;
 
 static Token currentToken;
 
+static int currentLine;
+
 void initDfa()
 {
 	currentState = State::START;
 	currentPos = 0;
+	currentLine = 1;
 
 	// create function table
 	transfers[(int)State::START] = transferStart;
+	transfers[(int)State::START_NEWLINE] = transferStartNewline;
 	transfers[(int)State::DONE] = transferDone;
 	transfers[(int)State::NOT_DONE] = transferNotDone;
 	transfers[(int)State::IN_NUM_1] = transferNum1;
@@ -35,6 +39,11 @@ void initDfa()
 }
 
 static void transferStart(char ch)
+{
+
+}
+
+static void transferStartNewline(char ch)
 {
 
 }
@@ -111,6 +120,7 @@ Token dfa(const char* str)
 			currentPos++;
 			return currentToken;
 		case State::NOT_DONE:
+		case State::ERROR:
 			return currentToken;
 		default:
 			break;

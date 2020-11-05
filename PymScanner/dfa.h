@@ -19,6 +19,6 @@ enum class State
 
 void initDfa();
 
-Token dfa(const char* str, size_t* start_pos);
+Token dfa(const char* str);
 
 #endif

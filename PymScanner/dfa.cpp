@@ -200,7 +200,18 @@ static void transferId(char ch)
 
 static void transferStr(char ch)
 {
-
+	if (ch == '"') {
+		currentToken.str.append(1, ch);
+		currentState = State::DONE;
+	}
+	else if (ch == '\n') {
+		currentToken.type = TokenType::ERROR;
+		currentState = State::ERROR;
+		currentToken.str = "Unexpected newline";
+	}
+	else {
+		currentToken.str.append(1, ch);
+	}
 }
 
 static void transferGt(char ch)

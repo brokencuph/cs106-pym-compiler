@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <stack>
 #include "dfa.h"
-
+#include <iostream>
 
 using namespace std::string_literals;
 
@@ -107,6 +107,7 @@ static void transferStart(char ch)
 		break;
 	case ':':
 		changeToken(""s, TokenType::COLON, State::DONE);
+		break;
 	case '\0':
 		changeToken(""s, TokenType::FEOF, State::DONE);
 		break;
@@ -130,6 +131,11 @@ static void transferStartNewline(char ch)
 	{
 		changeToken(""s, TokenType::INDENT, State::IN_INDENT);
 		indentNum = 1;
+		return;
+	}
+	else if (ch == '#' || ch == '\n')
+	{
+		changeToken("\0"s, TokenType::DEDENT, State::NOT_DONE);
 		return;
 	}
 	else
@@ -160,6 +166,10 @@ static void transferIndent(char ch)
 		indentNum++;
 		return;
 	}
+	else if (ch == '#' || ch == '\n')
+	{
+		changeToken("\0"s, TokenType::DEDENT, State::NOT_DONE);
+	}
 	else
 	{
 		if (currentLine == 1 && indentNum > 0)
@@ -186,6 +196,10 @@ static void transferIndent(char ch)
 				changeToken("Wrong indentation"s, TokenType::ERROR, State::ERROR);
 				return;
 			}
+		}
+		else if (indentNum == stIndent.top())
+		{
+			changeToken("\0"s, TokenType::DEDENT, State::NOT_DONE);
 		}
 	}
 }
@@ -325,7 +339,8 @@ static void transferComment(char ch)
 {
 	if (ch == '\n') {
 		currentToken.type = TokenType::NEWLINE;
-		currentState = State::DONE;
+		currentState = State::START_NEWLINE;
+		currentLine++;
 	}
 	else if (ch == '\0') {
 		currentToken.type = TokenType::FEOF;

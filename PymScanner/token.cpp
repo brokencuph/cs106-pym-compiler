@@ -24,5 +24,5 @@ Token::Token(TokenType _type, std::string _str, int _line) : type(_type), str(st
 
 std::ostream& operator<<(std::ostream& os, const Token& tk)
 {
-	return os << tk.line << ' ' << tokenNames[(int)tk.type] << tk.str << '\n';
+	return os << tk.line << ' ' << tokenNames[(int)tk.type] << ' ' << tk.str << '\n';
 }

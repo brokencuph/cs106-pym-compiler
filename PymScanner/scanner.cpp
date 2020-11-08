@@ -24,11 +24,17 @@ std::list<Token> scanner(const char* fileName)
 			}
 			continue;
 		}
-		tokenList.push_back(tmp);
 		if (tmp.type == TokenType::FEOF)
 		{
+			for (size_t i = 0; i < tmp.str[0]; i++)
+			{
+				tokenList.emplace_back(TokenType::DEDENT, ""s, tmp.line);
+			}
+			tokenList.push_back(std::move(tmp));
 			break;
 		}
+		tokenList.push_back(std::move(tmp));
+
 	}
 	return tokenList;
 }

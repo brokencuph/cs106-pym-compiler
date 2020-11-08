@@ -21,7 +21,7 @@ static Token currentToken(TokenType::ERROR, ""s, 1);
 
 static int currentLine;
 
-static std::unordered_map<std::string, TokenType> keywordsMap = { {"if", TokenType::IF},
+static const std::unordered_map<std::string, TokenType> keywordsMap = { {"if", TokenType::IF},
 	{"else",TokenType::ELSE},
 	{"elif",TokenType::ELIF},
 	{"while",TokenType::WHILE},
@@ -39,6 +39,16 @@ static stack<int> stIndent;
 
 static bool startFromNewLine = true;
 	
+static char eofDedent() // return char since it is stored in a string
+{
+	int cnt = 0;
+	while (stIndent.top() != 0)
+	{
+		cnt++;
+		stIndent.pop();
+	}
+	return (char)cnt;
+}
 
 static void changeToken(std::string&& str, TokenType tk, State nextState)
 {
@@ -87,6 +97,9 @@ static void transferStart(char ch)
 	case '/':
 		changeToken(""s, TokenType::DIV, State::DONE);
 		break;
+	case '%':
+		changeToken(""s, TokenType::MOD, State::DONE);
+		break;
 	case '(':
 		changeToken(""s, TokenType::LPR, State::DONE);
 		break;
@@ -109,16 +122,18 @@ static void transferStart(char ch)
 		changeToken(""s, TokenType::COLON, State::DONE);
 		break;
 	case '\0':
-		changeToken(""s, TokenType::FEOF, State::DONE);
+		changeToken("\0"s, TokenType::FEOF, State::DONE);
+		currentToken.str[0] = eofDedent();
 		break;
 	case '\n':
 		changeToken(""s, TokenType::NEWLINE, State::START_NEWLINE);
 		currentLine++;
 		break;
 	case ' ':
+	case '\r':
 		break;
 	default:
-		changeToken("Expected a valid token"s, TokenType::ERROR, State::ERROR);
+		changeToken("Unexpected token '"s + ch + "'"s, TokenType::ERROR, State::ERROR);
 		break;
 	}
 }
@@ -133,7 +148,7 @@ static void transferStartNewline(char ch)
 		indentNum = 1;
 		return;
 	}
-	else if (ch == '#' || ch == '\n')
+	else if (ch == '#' || ch == '\n' || ch == '\r')
 	{
 		changeToken("\0"s, TokenType::DEDENT, State::NOT_DONE);
 		return;
@@ -166,7 +181,7 @@ static void transferIndent(char ch)
 		indentNum++;
 		return;
 	}
-	else if (ch == '#' || ch == '\n')
+	else if (ch == '#' || ch == '\n' || ch == '\r')
 	{
 		changeToken("\0"s, TokenType::DEDENT, State::NOT_DONE);
 	}
@@ -344,7 +359,9 @@ static void transferComment(char ch)
 	}
 	else if (ch == '\0') {
 		currentToken.type = TokenType::FEOF;
+		currentToken.str = "\0"s;
 		currentState = State::DONE;
+		currentToken.str[0] = eofDedent();
 	}
 	
 }

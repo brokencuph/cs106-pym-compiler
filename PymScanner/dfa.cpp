@@ -221,12 +221,14 @@ static void transferIndent(char ch)
 
 static void transferDone(char ch)
 {
-	throw std::exception("Done transfered!");
+	// this is actually not possible
+	throw std::exception();
 }
 
 static void transferNotDone(char ch)
 {
-	throw std::exception("NotDone transfered!");
+	// this is actually not possible
+	throw std::exception();
 }
 
 static void transferNum1(char ch)

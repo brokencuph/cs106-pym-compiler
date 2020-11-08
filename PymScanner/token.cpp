@@ -5,16 +5,16 @@
 #include "token.h"
 
 
-static std::string tokenNames[42] = { "ID","NUMBER"," CHARS", // Literals
-	"PLUS"," MINUS"," MUL"," DIV"," MOD", // math operators
-	"LPR"," RPR"," LBR"," RBR", // delimiters
+static std::string tokenNames[42] = { "ID","NUMBER","CHARS", // Literals
+	"PLUS","MINUS","MUL","DIV","MOD", // math operators
+	"LPR","RPR","LBR","RBR", // delimiters
 	"ASSI", // assignment
-	"GT"," LT"," GE"," LE"," EQ"," NEQ", // relational operators
-	"INDENT"," DEDENT", // tokens relevant to indentation
-	"NEWLINE"," FEOF", // controling tokens
+	"GT","LT","GE","LE","EQ","NEQ", // relational operators
+	"INDENT","DEDENT", // tokens relevant to indentation
+	"NEWLINE","FEOF", // controling tokens
 	"ERROR", // error token
-	"COMMA"," COLON",//"," ;
-	"IF"," ELSE"," ELIF"," WHILE"," DEF"," RETURN"," AND"," OR"," NOT","INT"," NUM"," STR",//keywords
+	"COMMA","COLON",//"," ;
+	"IF","ELSE","ELIF","WHILE","DEF","RETURN","AND","OR","NOT","INT","NUM","STR",//keywords
 	"ARROW" };
 
 Token::Token(TokenType _type, std::string _str, int _line) : type(_type), str(std::move(_str)), line(_line)

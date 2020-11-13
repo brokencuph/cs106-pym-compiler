@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <stack>
 #include "dfa.h"
-#include <iostream>
+#include "utils.h"
 
 using namespace std::string_literals;
 
@@ -19,7 +19,9 @@ static size_t currentPos;
 
 static Token currentToken(TokenType::ERROR, ""s, 1);
 
-static int currentLine;
+static int currentLine; // line number
+
+static bool isFirstLine = true;
 
 static const std::unordered_map<std::string, TokenType> keywordsMap = { {"if", TokenType::IF},
 	{"else",TokenType::ELSE},
@@ -33,11 +35,11 @@ static const std::unordered_map<std::string, TokenType> keywordsMap = { {"if", T
 	{"int",TokenType::INT},
 	{"num",TokenType::NUM},
 	{"str",TokenType::STR}
-};
+}; // for keyword quick look up
 
-static stack<int> stIndent;
+static stack<int> stIndent; // indentation stack
 
-static bool startFromNewLine = true;
+static bool startFromNewLine = true; // record the next starting state of the DFA
 	
 static char eofDedent() // return char since it is stored in a string
 {
@@ -56,17 +58,25 @@ static void changeToken(std::string&& str, TokenType tk, State nextState)
 	currentState = nextState;
 }
 
+//
+// Below are state transfer functions, each of which handles one state.
+//
+
 static void transferStart(char ch)
 {
-	if (isdigit(ch))
+	if (isdigit(ch)) // into NUM
 	{
 		changeToken(string(1, ch), TokenType::NUMBER, State::IN_NUM_1);
 		return;
 	}
-	if (isalpha(ch) || ch == '_')
+	if (isalpha(ch) || ch == '_') // into IDENTIFIER
 	{
 		changeToken(string(1, ch), TokenType::ID, State::IN_ID);
 		return;
+	}
+	if (pym_utils::pymIsSpace(ch))
+	{
+		return; // ignore space characters (' ', '\t', etc.)
 	}
 	switch (ch)
 	{
@@ -133,7 +143,7 @@ static void transferStart(char ch)
 	case '\r':
 		break;
 	default:
-		changeToken("Unexpected token '"s + ch + "'"s, TokenType::ERROR, State::ERROR);
+		changeToken("Unexpected token '"s + ch + "'."s, TokenType::ERROR, State::ERROR);
 		break;
 	}
 }
@@ -142,15 +152,20 @@ static int indentNum = 0;
 
 static void transferStartNewline(char ch)
 {
-	if (ch == ' ')
+	if (ch == ' ') // record indentation
 	{
 		changeToken(""s, TokenType::INDENT, State::IN_INDENT);
 		indentNum = 1;
 		return;
 	}
-	else if (ch == '#' || ch == '\n' || ch == '\r')
+	else if (ch == '#' || ch == '\n' || ch == '\r') // empty line
 	{
 		changeToken("\0"s, TokenType::DEDENT, State::NOT_DONE);
+		return;
+	}
+	else if (ch == '\t')
+	{
+		changeToken("Using Tab as indentation is not supported."s, TokenType::ERROR, State::ERROR);
 		return;
 	}
 	else
@@ -163,7 +178,7 @@ static void transferStartNewline(char ch)
 			while (stIndent.top() > indentNum)
 			{
 				stIndent.pop();
-				currentToken.str[0]++; // use str[0] as the token count
+				currentToken.str[0]++; // use str[0] as the token count, which will be handled in scanner.cpp
 			}
 			if (stIndent.top() < indentNum)
 			{
@@ -185,9 +200,14 @@ static void transferIndent(char ch)
 	{
 		changeToken("\0"s, TokenType::DEDENT, State::NOT_DONE);
 	}
+	else if (ch == '\t')
+	{
+		changeToken("Using Tab as indentation is not supported."s, TokenType::ERROR, State::ERROR);
+		return;
+	}
 	else
 	{
-		if (currentLine == 1 && indentNum > 0)
+		if (isFirstLine && indentNum > 0)
 		{
 			changeToken("The first line is indented."s, TokenType::ERROR, State::ERROR);
 			return;
@@ -208,7 +228,7 @@ static void transferIndent(char ch)
 			}
 			if (stIndent.top() < indentNum)
 			{
-				changeToken("Wrong indentation"s, TokenType::ERROR, State::ERROR);
+				changeToken("Indentation error."s, TokenType::ERROR, State::ERROR);
 				return;
 			}
 		}
@@ -263,11 +283,11 @@ static void transferId(char ch)
 	if (isalnum(ch) || ch=='_') 
 	{
 		currentToken.str.append(1, ch);
-		auto it = keywordsMap.find(currentToken.str);
-		if (it == keywordsMap.end())
-			currentToken.type = TokenType::ID;
+		auto it = keywordsMap.find(currentToken.str); // look up for keyword
+		if (it == keywordsMap.end()) 
+			currentToken.type = TokenType::ID; // not found in keyword
 		else
-			currentToken.type = it->second;
+			currentToken.type = it->second; // record the keyword token type
 		return;
 	}
 	else {
@@ -286,7 +306,7 @@ static void transferStr(char ch)
 	else if (ch == '\n') {
 		currentToken.type = TokenType::ERROR;
 		currentState = State::ERROR;
-		currentToken.str = "Unexpected newline";
+		currentToken.str = "Unexpected newline in string literal.";
 	}
 	else {
 		currentToken.str.append(1, ch);
@@ -335,7 +355,7 @@ static void transferNeq(char ch)
 	}
 	else {
 		currentToken.type = TokenType::ERROR;
-		currentToken.str = "unexpected '"s + ch + "'"s;
+		currentToken.str = "Unexpected '"s + ch + "'."s;
 		currentState = State::ERROR;
 	}
 }
@@ -373,6 +393,7 @@ void initDfa()
 	currentState = State::START;
 	currentPos = 0;
 	currentLine = 1;
+	isFirstLine = true;
 
 	startFromNewLine = true;
 
@@ -396,6 +417,18 @@ void initDfa()
 	transfers[(int)State::IN_INDENT] = transferIndent;
 }
 
+void setFirstLineFlag()
+{
+	if ((currentState == State::DONE ||
+		currentState == State::NOT_DONE ||
+		currentState == State::START_NEWLINE ||
+		currentState == State::ERROR) 
+		&& currentToken.type != TokenType::NEWLINE
+		&& currentToken.type != TokenType::DEDENT)
+	{
+		isFirstLine = false;
+	}
+}
 
 Token dfa(const char* str)
 {
@@ -413,6 +446,7 @@ Token dfa(const char* str)
 	{
 		transfers[(int)currentState](str[currentPos]);
 		currentPos++;
+		setFirstLineFlag();
 		switch (currentState)
 		{
 		case State::DONE:

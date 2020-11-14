@@ -1,7 +1,9 @@
+#include <iostream>
 #include "scanner.h"
 #include "token.h"
 #include "utils.h"
 #include "dfa.h"
+
 
 using namespace std::string_literals;
 
@@ -32,6 +34,11 @@ std::list<Token> scanner(const char* fileName)
 			}
 			tokenList.push_back(std::move(tmp));
 			break;
+		}
+		if (tmp.type == TokenType::ERROR)
+		{
+			// Report error message immediately.
+			fprintf(stderr, "%s:%d:\x001b[31mERROR\x001b[0m: %s\n\n", fileName, tmp.line, tmp.str.c_str());
 		}
 		tokenList.push_back(std::move(tmp));
 

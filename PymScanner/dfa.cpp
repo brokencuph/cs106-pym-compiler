@@ -307,6 +307,7 @@ static void transferStr(char ch)
 		currentToken.type = TokenType::ERROR;
 		currentState = State::ERROR;
 		currentToken.str = "Unexpected newline in string literal.";
+		currentLine++;
 	}
 	else {
 		currentToken.str.append(1, ch);

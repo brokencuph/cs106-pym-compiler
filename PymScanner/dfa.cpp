@@ -143,7 +143,7 @@ static void transferStart(char ch)
 	case '\r':
 		break;
 	default:
-		changeToken("Unexpected token '"s + ch + "'."s, TokenType::ERROR, State::ERROR);
+		changeToken("Unexpected '"s + ch + "'."s, TokenType::ERROR, State::ERROR);
 		break;
 	}
 }

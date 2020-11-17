@@ -15,8 +15,8 @@ int main(int argc, char** argv)
 	}
 	std::string fileName;
 	std::cout << ":) Hello, what is the name of the Pym source file?" << std::endl;
-	std::cout << ">>>";
-	std::cin >> fileName;
+	std::cout << ">>> ";
+	std::getline(std::cin, fileName);
 	auto res = scanner(fileName.c_str());
 	std::cout << ":) The listed of tokens are printed as follows:" << std::endl;
 	std::cout << std::endl;

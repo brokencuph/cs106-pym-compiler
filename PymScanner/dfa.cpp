@@ -143,7 +143,7 @@ static void transferStart(char ch)
 	case '\r':
 		break;
 	default:
-		changeToken("Unexpected token '"s + ch + "'."s, TokenType::ERROR, State::ERROR);
+		changeToken("Unexpected '"s + ch + "'."s, TokenType::ERROR, State::ERROR);
 		break;
 	}
 }
@@ -307,6 +307,7 @@ static void transferStr(char ch)
 		currentToken.type = TokenType::ERROR;
 		currentState = State::ERROR;
 		currentToken.str = "Unexpected newline in string literal.";
+		currentLine++;
 	}
 	else {
 		currentToken.str.append(1, ch);

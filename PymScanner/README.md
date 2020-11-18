@@ -8,8 +8,7 @@ HE PEILIN, 1809853U-I011-0078
 This program implements a scanner (or lexical analyser) for Pym language (a simple language that is similar to Python), described in *Pym Language v2.pdf*. All given Pym examples are tested and can be correctly processed to generate tokens (including errors).
 
 ## Declaration of DFA
-To make the comprehension easily, you can read JPG file ***DFA implement***. 
-![DFA implement](/cs106-pym-compiler/PymScanner/DFA implement.jpg)
+To make the comprehension easily, you can read JPG file ***DFA implement***. ![DFA implement](DFA%20implement.jpg)
 
 Meanwhile,the more specific details of design can be found in progam code file ***dfa.cpp*** 
 

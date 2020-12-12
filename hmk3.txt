@@ -1,0 +1,70 @@
+/*
+Starting rule of parsing a Pym program.
+*/
+program --> statement_list
+
+TreeNode* program(ParserInfo*, Bool* status);
+
+statement_list --> statement_list statement | empty
+
+statement --> compound_statement | expression_statement | if_statement | while_statement | def_statement | return_statement | declaration_statement
+
+compound_statement --> INDENT statement_list DEDENT
+
+expression_statement --> expression simple_end
+
+expression --> var = expression | or_expression
+
+or_expression --> or_expression OR and_expression | and_expression
+
+and_expression --> and_expression AND rel_expression | rel_expression
+
+rel_expression --> rel_expression relop additive_expression | additive_expression
+
+relop --> == | != | > | >= | < | <=
+
+additive_expression --> additive_expression addop mul_expression | mul_expression
+
+addop --> + | -
+
+mul_expression --> mul_expression mulop unary_expression | unary_expression
+
+mulop --> * | / | %
+
+unary_expression --> unaryop unary_expression | suffix_expression
+
+unaryop --> + | - | NOT
+
+suffix_expression --> ( expression ) | suffix_expression ( arg_list ) | suffix_expression [ expression ] | ID | NUMBER | CHARS | array_constant
+
+array_constant --> [ arg_list ]
+
+arg_list --> empty | arg_list , expression
+
+if_statement --> if_clause elif_clause_list else_clause
+
+if_clause --> IF expression COLON NEWLINE compound_statement
+
+elif_clause_list --> empty | ELIF expression COLON NEWLINE compound_statement elif_clause_list
+
+else_clause --> ELSE COLON NEWLINE compound_statement
+
+while_statement --> WHILE expression COLON NEWLINE compound_statement
+
+return_statement --> RETURN expression simple_end | RETURN simple_end
+
+def_statement --> DEF ID ( param_list ) func_type_specifier COLON NEWLINE compound_statement
+
+func_type_specifier --> empty | ARROW type_specifier | ARROW type_specifier [ array_extent ]
+
+param_list --> empty | param_list , param
+
+param --> ID | ID COLON type_specifier | ID COLON type_specifier [ array_extent ]
+
+type_specifier --> INT | NUM | STR
+
+array_extent --> empty | NUMBER
+
+declaration_statement --> ID COLON type_specifier simple_end
+
+simple_end --> NEWLINE | FEOF

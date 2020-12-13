@@ -342,3 +342,4 @@ healthchecksdb
 *.py
 /PymScanner/pymscanner
 /PymScanner/scanner
+PymScanner/pymscanner.exe

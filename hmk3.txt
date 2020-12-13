@@ -1,4 +1,9 @@
 /*
+Authors: HE YUJIE, 1809853J-I011-0065
+CHEN YUXUAN, 1809853J-I011-0011
+HE PEILIN, 1809853U-I011-0078
+*/
+/*
 Starting rule of parsing a Pym program. Pym program consists of a sequence of statements. Declarations are also statements.
 */
 program --> statement_list
@@ -149,35 +154,106 @@ Computations:
 Example result:
         ()
         /
-       /
-      () -- () -- () --()
+      () - () - () -()
 */
 TreeNode* arg_list(ParserInfo*, Bool* status);
 
 if_statement --> if_clause elif_clause_list else_clause
+/*
+Computations:
+    - call if_clause , elif_clause_list and else_clause
+Example result:
+        ()
+       / | \
+     ()  () ()
+*/
+TreeNode* if_statement(ParserInfo*, Bool* status);
 
 if_clause --> IF expression COLON NEWLINE compound_statement
+/*
+Example result:
+        ()
+        / \
+      ()   ()
+*/
+TreeNode* if_clause(ParserInfo*, Bool* status);
 
 elif_clause_list --> empty | ELIF expression COLON NEWLINE compound_statement elif_clause_list
+/*
+Computations:
+    - generate linked list of elif clauses, each of which has two children (expression and compound_statement)  
+Example result:
+         ()
+        /
+      ()-   () - () -  ()
+      / \  /  \  / \   / \
+     () () () () () () () ()
+*/
+TreeNode* elif_clause_list(ParserInfo*, Bool* status);
 
-else_clause --> ELSE COLON NEWLINE compound_statement
+else_clause --> ELSE COLON NEWLINE compound_statement | empty
+/*
+Computations:
+    - left child is compound_statement
+*/
+TreeNode* else_clause(ParserInfo*, Bool* status);
 
 while_statement --> WHILE expression COLON NEWLINE compound_statement
+/*
+Computations:
+    - binary tree of expression and compound_statement
+*/
+TreeNode* while_statement(ParserInfo*, Bool* status);
 
 return_statement --> RETURN expression simple_end | RETURN simple_end
+/*
+Computations:
+    - left child is expression 
+*/
+TreeNode* return_statement(ParserInfo*, Bool* status);
 
 def_statement --> DEF ID ( param_list ) func_type_specifier COLON NEWLINE compound_statement
+/*
+Computations:
+    - three children are param_list, func_type_specifier and compound_statement
+*/
+TreeNode* def_statement(ParserInfo*, Bool* status);
 
+//For function return types
 func_type_specifier --> empty | ARROW type_specifier | ARROW type_specifier [ array_extent ]
+/*
+Computations:
+    - left child is type_specifier and right child is array_extent
+*/
+TreeNode* func_type_specifier(ParserInfo*, Bool* status);
 
-param_list --> empty | param_list , param
+//paramters list
+param_list --> empty | param_list , param | param_list
+/*
+Computations:
+    - similar to arg_list
+*/
+TreeNode* param_list(ParserInfo*, Bool* status);
 
 param --> ID | ID COLON type_specifier | ID COLON type_specifier [ array_extent ]
+/*
+Computations:
+    - similar to func_type_specifier except that ID should be stored
+*/
+TreeNode* param(ParserInfo*, Bool* status);
 
+//type names (no function generated)
 type_specifier --> INT | NUM | STR
 
+//size of array (no function generated)
 array_extent --> empty | NUMBER
 
 declaration_statement --> ID COLON type_specifier simple_end
+/*
+Computations:
+    - left child is type_specifier and ID should be stored
+*/
+TreeNode* declaration_statement(ParserInfo*, Bool* status);
 
+//end of simple statement (no function generated)
 simple_end --> NEWLINE | FEOF

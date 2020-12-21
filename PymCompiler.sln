@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PymScanner", "PymScanner\PymScanner.vcxproj", "{2C10E438-E1A5-42EB-869F-52B432F6EDE1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PymParser", "PymParser\PymParser.vcxproj", "{953D1C72-57BE-42D1-822D-ECE719E1BAA3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2C10E438-E1A5-42EB-869F-52B432F6EDE1} = {2C10E438-E1A5-42EB-869F-52B432F6EDE1}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

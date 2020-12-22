@@ -5,6 +5,8 @@
 #include "utils.h"
 #include "parsetree.h"
 
+using SharedTreeNode = std::shared_ptr<TreeNode>;
+
 class Parser
 {
 private:
@@ -13,11 +15,29 @@ private:
 
 	// below are TreeNode generators (corresponding to grammar rules)
 	// plan to use exception handling to report errors
-	TreeNode program();
+	SharedTreeNode program();
+
+	SharedTreeNode statement_list();
+
+	SharedTreeNode statement();
+
+	SharedTreeNode def_stmt();
+
+	SharedTreeNode decl_stmt();
+
+	SharedTreeNode return_stmt();
+
+	SharedTreeNode expr_stmt();
+
+	SharedTreeNode if_stmt();
+
+	SharedTreeNode while_stmt();
+
+	SharedTreeNode compound_stmt();
 public:
 	Parser(std::list<Token> tokenList);
 
-	TreeNode parse();
+	SharedTreeNode parse();
 };
 
 #endif

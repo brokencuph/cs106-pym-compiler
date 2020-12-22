@@ -1,19 +1,61 @@
 #include "parsetree.h"
 
 TreeNode::TreeNode() : lSibling(0), rSibling(0), children{ 0 }, something(0),
-	lineNo(0), nodeKind(NodeKind::STMT)
+	lineNo(0), nodeKind(NodeKind::STMT), type(ExprType::TBD)
 {
 	kind.stmt = StmtKind::DEF;
+	attr.dclAttr = { ExprType::TBD, nullptr, 0 };
 }
 
+// clear string in heap
 TreeNode::~TreeNode()
 {
-	for (int i = 0; i < MAX_CHILDREN; i++)
+	if (nodeKind == NodeKind::STMT)
 	{
-		if (children[i])
-			children[i]->~TreeNode();
+		if (kind.stmt == StmtKind::DECL || kind.stmt == StmtKind::DEF)
+		{
+			if (attr.dclAttr.name)
+			{
+				delete attr.dclAttr.name;
+				attr.dclAttr.name = nullptr;
+			}
+		}
 	}
-	rSibling->~TreeNode();
+	else if (nodeKind == NodeKind::PARAM)
+	{
+		if (attr.dclAttr.name)
+		{
+			delete attr.dclAttr.name;
+			attr.dclAttr.name = nullptr;
+		}
+	}
+	else if (nodeKind == NodeKind::EXPR)
+	{
+		switch (kind.expr)
+		{
+		case ExprKind::STR:
+			if (attr.exprAttr.str)
+			{
+				delete attr.exprAttr.str;
+				attr.exprAttr.str = nullptr;
+			}
+			break;
+		case ExprKind::ID:
+		case ExprKind::ARRAY:
+		case ExprKind::CALL:
+			if (attr.exprAttr.id)
+			{
+				delete attr.exprAttr.id;
+				attr.exprAttr.id = nullptr;
+			}
+			break;
+		}
+	}
+	if (something)
+	{
+		delete something;
+		something = nullptr;
+	}
 }
 
 std::ostream& operator<<(std::ostream& os, const TreeNode& t)

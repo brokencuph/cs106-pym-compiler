@@ -3,6 +3,7 @@
 
 
 #include <string>
+#include <memory>
 #include "token.h"
 
 constexpr auto MAX_CHILDREN = 4;
@@ -30,7 +31,7 @@ enum class ParamKind
 
 enum class ExprType
 {
-	INT, NUM, STRING, ADDR
+	TBD, INT, NUM, STRING, ADDR
 };
 
 struct Rational
@@ -40,9 +41,9 @@ struct Rational
 
 struct TreeNode
 {
-	TreeNode* children[MAX_CHILDREN];
-	TreeNode* lSibling;
-	TreeNode* rSibling;
+	std::shared_ptr<TreeNode> children[MAX_CHILDREN];
+	std::shared_ptr<TreeNode> lSibling;
+	std::shared_ptr<TreeNode> rSibling;
 
 	int lineNo;
 
@@ -52,7 +53,7 @@ struct TreeNode
 		union ExprAttr{
 			TokenType op;
 			Rational num;
-			char* str;
+			char* str; // these pointers are owned by this pointer, and their space will be deallocated.
 			char* id;
 		} exprAttr;
 		struct {

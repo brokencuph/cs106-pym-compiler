@@ -31,7 +31,8 @@ enum class ParamKind
 
 enum class ExprType
 {
-	TBD, INT, NUM, STRING, ADDR
+	TBD, INT, NUM, STRING,
+	
 };
 
 struct Rational
@@ -58,11 +59,13 @@ struct TreeNode
 		} exprAttr;
 		struct {
 			ExprType type;
+			bool isAddr;
 			char* name;
 			size_t size;
 		} dclAttr;
 	} attr;
 	ExprType type;
+	bool isAddr;
 
 	void* something;
 

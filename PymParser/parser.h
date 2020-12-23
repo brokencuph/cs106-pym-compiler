@@ -34,6 +34,12 @@ private:
 	SharedTreeNode while_stmt();
 
 	SharedTreeNode compound_stmt();
+
+	SharedTreeNode param_list();
+
+	SharedTreeNode expression();
+
+	std::pair<TokenType, bool> interpret_type();
 public:
 	Parser(std::list<Token> tokenList);
 

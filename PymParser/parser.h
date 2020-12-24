@@ -31,6 +31,14 @@ private:
 
 	SharedTreeNode if_stmt();
 
+	SharedTreeNode if_clause();
+	
+	SharedTreeNode elif_clause_list();
+
+	SharedTreeNode elif_clause();
+	
+	SharedTreeNode else_clause();
+
 	SharedTreeNode while_stmt();
 
 	SharedTreeNode compound_stmt();
@@ -58,6 +66,9 @@ private:
 	SharedTreeNode factor();
 
 	SharedTreeNode arg_list();
+
+	template <typename ARR, typename func>
+	SharedTreeNode expr_op_lassoc(ARR&& tk, func next_stage);
 
 	std::pair<TokenType, bool> interpret_type();
 public:

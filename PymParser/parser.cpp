@@ -6,11 +6,17 @@
 
 #include "parser.h"
 
+using std::make_shared;
+
 static constexpr TokenType rela_op[] = { TokenType::LT, TokenType::LE, TokenType::GT, TokenType::GE, TokenType::NEQ, TokenType::EQ };
 
 static constexpr TokenType add_min_op[] = { TokenType::PLUS, TokenType::MINUS };
 
 static constexpr TokenType mul_div_op[] = { TokenType::MUL, TokenType::DIV, TokenType::MOD };
+
+static constexpr TokenType or_op[] = { TokenType::OR };
+
+static constexpr TokenType and_not_op[] = { TokenType::AND, TokenType::NOT };
 
 template <typename ARR>
 static inline bool inOpList(TokenType t, ARR&& l)
@@ -19,7 +25,32 @@ static inline bool inOpList(TokenType t, ARR&& l)
 	return std::find(std::begin(l), std::end(l), t) != std::end(l);
 }
 
-using std::make_shared;
+template <typename ARR, typename func>
+SharedTreeNode Parser::expr_op_lassoc(ARR&& tk, func next_stage)
+{
+	try
+	{
+		return next_stage();
+	}
+	catch (const std::invalid_argument&)
+	{
+		auto root = make_shared<TreeNode>();
+		root->nodeKind = NodeKind::EXPR;
+		root->kind.expr = ExprKind::OP;
+		root->lineNo = pos->line;
+		root->children[0] = expr_op_lassoc(tk, next_stage);
+		if (!inOpList(pos->type, tk))
+		{
+			throw std::invalid_argument("Wrong operand");
+		}
+		root->attr.exprAttr.op = pos->type;
+		pos++;
+		root->children[1] = next_stage();
+		return root;
+	}
+}
+
+
 static constexpr ExprType toExprType(TokenType t) {
 	if (t == TokenType::INT)
 	{
@@ -229,6 +260,106 @@ SharedTreeNode Parser::expr_stmt() {
 	pos++;
 	return root;
 }
+
+SharedTreeNode Parser::if_stmt() {
+	auto root = make_shared<TreeNode>();
+	root->nodeKind = NodeKind::STMT;
+	root->kind.stmt = StmtKind::IF;
+	root->lineNo = pos->line;
+	
+	root->children[0] = if_clause();
+	root->children[1] = elif_clause_list();
+	root->children[2] = else_clause();
+
+	return root;
+}
+
+SharedTreeNode Parser::if_clause() {
+	auto root = make_shared<TreeNode>();
+	root->nodeKind = NodeKind::STMT;
+	root->kind.stmt = StmtKind::IF;
+	root->lineNo = pos->line;
+
+	if (pos->type != TokenType::IF) {
+		throw std::invalid_argument("IF expected");
+	}
+	pos++;
+	root->children[0] = expression();
+	if (pos->type != TokenType::COLON) {
+		throw std::invalid_argument("COLON expected");
+	}
+	pos++;
+	if (pos->type != TokenType::NEWLINE) {
+		throw std::invalid_argument("NEWLINE expected");
+	}
+	pos++;
+	root->children[1] = compound_stmt();
+	return root;
+}
+
+SharedTreeNode Parser::elif_clause_list() {
+	if (pos->type != TokenType::ELIF) {
+		return nullptr;
+	}
+		
+	auto root = make_shared<TreeNode>();
+	auto curStmtPos = &root->children[0];
+	while (pos != content.cend() && pos->type != TokenType::FEOF) {
+		*curStmtPos = elif_clause();
+		curStmtPos = &((*curStmtPos)->lSibling);
+		pos++;
+	}
+
+	
+}
+SharedTreeNode Parser::elif_clause()
+{
+	auto root = make_shared<TreeNode>();
+	root->nodeKind = NodeKind::STMT;
+	root->kind.stmt = StmtKind::ELIF;
+	root->lineNo = pos->line;
+	if (pos->type != TokenType::ELIF) {
+		throw std::invalid_argument("ELIF expected");
+	}
+	pos++;
+	root->children[0] = expression();
+	if (pos->type != TokenType::COLON) {
+		throw std::invalid_argument("COLON expected");
+	}
+	pos++;
+	if (pos->type != TokenType::NEWLINE) {
+		throw std::invalid_argument("NEWLINE expected");
+	}
+	pos++;
+	root->children[1] = compound_stmt();
+	return root;
+}
+
+SharedTreeNode Parser::else_clause()
+{
+	if (pos->type != TokenType::ELSE) {
+		return nullptr;
+	}
+
+	auto root = make_shared<TreeNode>();
+	root->nodeKind = NodeKind::STMT;
+	root->kind.stmt = StmtKind::ELSE;
+	root->lineNo = pos->line;
+
+	if (pos->type != TokenType::COLON) {
+		throw std::invalid_argument("COLON expected");
+	}
+	pos++;
+	if (pos->type != TokenType::NEWLINE) {
+		throw std::invalid_argument("NEWLINE expected");
+	}
+	pos++;
+	root->children[0] = compound_stmt();
+
+
+	return root;
+}
+
 SharedTreeNode Parser::return_stmt() {
 	auto root = make_shared<TreeNode>();
 	root->nodeKind = NodeKind::STMT;
@@ -315,3 +446,61 @@ SharedTreeNode Parser::arg_list()
 	return root;
 }
 
+SharedTreeNode Parser::or_expr()
+{
+	
+	return expr_op_lassoc(or_op,[this] {return and_not_expr(); });
+}
+
+SharedTreeNode Parser::and_not_expr()
+{
+	return expr_op_lassoc(and_not_op, [this] {return not_expr(); });
+}
+
+SharedTreeNode Parser::not_expr()
+{
+	if (pos->type != TokenType::NOT)
+	{
+		return relational_expr();
+	}
+	pos++;
+	auto root = make_shared<TreeNode>();
+	root->nodeKind = NodeKind::EXPR;
+	root->kind.expr = ExprKind::OP;
+	root->attr.exprAttr.op = TokenType::NOT;
+	root->lineNo = pos->line;
+	root->children[0] = not_expr();
+	return root;
+}
+
+SharedTreeNode Parser::relational_expr()
+{
+	return expr_op_lassoc(rela_op, [this] {return add_min_expr(); });
+}
+
+SharedTreeNode Parser::add_min_expr()
+{
+	return expr_op_lassoc(add_min_op, [this] {return mul_div_expr(); });
+}
+
+SharedTreeNode Parser::mul_div_expr()
+{
+	return expr_op_lassoc(mul_div_op, [this] {return sign_expr(); });
+}
+
+SharedTreeNode Parser::sign_expr()
+{
+	if (!inOpList(pos->type, add_min_op))
+	{
+		return factor();
+	}
+	
+	auto root = make_shared<TreeNode>();
+	root->nodeKind = NodeKind::EXPR;
+	root->kind.expr = ExprKind::OP;
+	root->attr.exprAttr.op = pos->type;
+	root->lineNo = pos->line;
+	pos++;
+	root->children[0] = sign_expr();
+	return root;
+}

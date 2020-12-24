@@ -11,7 +11,7 @@ constexpr auto MAX_CHILDREN = 4;
 // these are scoped enums, so no suffix needed
 enum class NodeKind
 {
-	 STMT, EXPR, PARAM
+	 STMT, EXPR, PARAM, LIST
 };
 
 enum class StmtKind
@@ -29,6 +29,11 @@ enum class ParamKind
 	DYN, STC, STC_ARR
 };
 
+enum class ListKind
+{
+	STMT, PARAM, ARG, ELIF
+};
+
 enum class ExprType
 {
 	TBD, INT, NUM, STRING,
@@ -38,6 +43,8 @@ enum class ExprType
 struct Rational
 {
 	int num, den; // numerator and denominator
+	
+	static Rational parse(const std::string& str);
 };
 
 struct TreeNode
@@ -49,7 +56,7 @@ struct TreeNode
 	int lineNo;
 
 	NodeKind nodeKind;
-	union Kind { StmtKind stmt; ExprKind expr; ParamKind param; } kind;
+	union Kind { StmtKind stmt; ExprKind expr; ParamKind param; ListKind list; } kind;
 	union Attr{
 		union ExprAttr{
 			TokenType op;

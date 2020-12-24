@@ -1,4 +1,22 @@
+#include <sstream>
 #include "parsetree.h"
+
+Rational Rational::parse(const std::string& str)
+{
+	Rational ans;
+	std::stringstream ss(str);
+	ss >> ans.num;
+	if (ss.peek() == '\\')
+	{
+		ss.get();
+		ss >> ans.den;
+	}
+	else
+	{
+		ans.den = 1;
+	}
+	return ans;
+}
 
 TreeNode::TreeNode() : lSibling(0), rSibling(0), children{ 0 }, something(0),
 	lineNo(0), nodeKind(NodeKind::STMT), type(ExprType::TBD)

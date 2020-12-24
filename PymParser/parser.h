@@ -67,10 +67,18 @@ private:
 
 	SharedTreeNode arg_list();
 
+	SharedTreeNode var();
+
+	SharedTreeNode call();
+
+	
+
 	template <typename ARR, typename func>
 	SharedTreeNode expr_op_lassoc(ARR&& tk, func next_stage);
 
 	std::pair<TokenType, bool> interpret_type();
+
+	std::pair<TokenType, int> interpret_type_with_extent();
 public:
 	Parser(std::list<Token> tokenList);
 

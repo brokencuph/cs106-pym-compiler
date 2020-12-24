@@ -37,7 +37,27 @@ private:
 
 	SharedTreeNode param_list();
 
+	SharedTreeNode param();
+
 	SharedTreeNode expression();
+
+	SharedTreeNode or_expr();
+
+	SharedTreeNode and_not_expr();
+
+	SharedTreeNode not_expr();
+
+	SharedTreeNode relational_expr();
+
+	SharedTreeNode add_min_expr();
+
+	SharedTreeNode mul_div_expr();
+
+	SharedTreeNode sign_expr();
+
+	SharedTreeNode factor();
+
+	SharedTreeNode arg_list();
 
 	std::pair<TokenType, bool> interpret_type();
 public:

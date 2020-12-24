@@ -4,7 +4,11 @@ TreeNode::TreeNode() : lSibling(0), rSibling(0), children{ 0 }, something(0),
 	lineNo(0), nodeKind(NodeKind::STMT), type(ExprType::TBD)
 {
 	kind.stmt = StmtKind::DEF;
-	attr.dclAttr = { ExprType::TBD, nullptr, 0 };
+	attr.dclAttr = { ExprType::TBD, false, nullptr, 0 };
+	//attr.dclAttr.type = ExprType::TBD;
+	//attr.dclAttr.name = nullptr;
+	//attr.dclAttr.isAddr = false;
+	//attr.dclAttr.size = 0u;
 }
 
 // clear string in heap

@@ -1,8 +1,23 @@
 #include <stdexcept>
 #include <memory>
 #include <cstring>
+#include <algorithm>
+#include <type_traits>
 
 #include "parser.h"
+
+static constexpr TokenType rela_op[] = { TokenType::LT, TokenType::LE, TokenType::GT, TokenType::GE, TokenType::NEQ, TokenType::EQ };
+
+static constexpr TokenType add_min_op[] = { TokenType::PLUS, TokenType::MINUS };
+
+static constexpr TokenType mul_div_op[] = { TokenType::MUL, TokenType::DIV, TokenType::MOD };
+
+template <typename ARR>
+static inline bool inOpList(TokenType t, ARR&& l)
+{
+	constexpr auto s = std::extent_v<ARR>;
+	return std::find(std::begin(l), std::end(l), t) != std::end(l);
+}
 
 using std::make_shared;
 static constexpr ExprType toExprType(TokenType t) {
@@ -71,6 +86,7 @@ SharedTreeNode Parser::statement_list()
 		curStmtPos = &((*curStmtPos)->rSibling);
 		pos++;
 	}
+	return root;
 }
 
 SharedTreeNode Parser::statement()

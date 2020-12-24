@@ -268,5 +268,50 @@ SharedTreeNode Parser::decl_stmt() {
 		throw std::invalid_argument("COLON expected");
 	}
 	pos++;
-	// not finished
+	if (pos->type != TokenType::INT && pos->type != TokenType::STR && pos->type != TokenType::NUM) {
+		throw std::invalid_argument("type specifier expected");
+	}
+	else
+	{
+		root->attr.dclAttr.type = toExprType(pos->type);
+	}
+	pos++;
+	if (pos->type != TokenType::NEWLINE) {
+		throw std::invalid_argument("NEWLINE expected");
+	}
+	pos++;
+	return root;
 }
+SharedTreeNode Parser::param_list()
+{
+	auto root = make_shared<TreeNode>();
+	auto curParamPos = &root->children[0]; // address of write position
+	while (pos != content.cend() && pos->type != TokenType::FEOF && pos->type!=TokenType::COMMA)
+	{
+		*curParamPos = param_list();
+		curParamPos = &((*curParamPos)->rSibling);
+		pos++;
+	}
+	if (pos->type == TokenType::COMMA || pos==content.cbegin()) {
+		pos++;
+		root->children[1] = expression();
+	}
+	return root;
+}
+SharedTreeNode Parser::arg_list()
+{
+	auto root = make_shared<TreeNode>();
+	auto curArgPos = &root->children[0]; // address of write position
+	while (pos != content.cend() && pos->type != TokenType::FEOF && pos->type != TokenType::COMMA)
+	{
+		*curArgPos = arg_list();
+		curArgPos = &((*curArgPos)->rSibling);
+		pos++;
+	}
+	if (pos->type == TokenType::COMMA || pos == content.cbegin()) {
+		pos++;
+		root->children[1] = expression();
+	}
+	return root;
+}
+

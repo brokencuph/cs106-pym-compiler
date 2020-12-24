@@ -481,7 +481,7 @@ SharedTreeNode Parser::arg_list()
 	root->kind.list = ListKind::ARG;
 	root->lineNo = pos->line;
 	auto curArgPos = &root->children[0]; // address of write position
-	while (pos != content.cend() && pos->type != TokenType::FEOF)
+	while (pos != content.cend() && pos->type != TokenType::FEOF && pos->type != TokenType::RPR)
 	{
 		*curArgPos = expression();
 		curArgPos = &((*curArgPos)->rSibling);

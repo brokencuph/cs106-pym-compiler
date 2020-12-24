@@ -16,7 +16,7 @@ enum class NodeKind
 
 enum class StmtKind
 {
-	DEF, DECL, CMPD, IF, WHILE, RETURN, EXPR
+	DEF, DECL, CMPD, IF, WHILE, RETURN, EXPR, ELIF, ELSE;
 };
 
 enum class ExprKind

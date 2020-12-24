@@ -31,6 +31,14 @@ private:
 
 	SharedTreeNode if_stmt();
 
+	SharedTreeNode if_clause();
+	
+	SharedTreeNode elif_clause_list();
+
+	SharedTreeNode elif_clause();
+	
+	SharedTreeNode else_clause();
+
 	SharedTreeNode while_stmt();
 
 	SharedTreeNode compound_stmt();

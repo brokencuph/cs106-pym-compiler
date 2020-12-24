@@ -229,6 +229,106 @@ SharedTreeNode Parser::expr_stmt() {
 	pos++;
 	return root;
 }
+
+SharedTreeNode Parser::if_stmt() {
+	auto root = make_shared<TreeNode>();
+	root->nodeKind = NodeKind::STMT;
+	root->kind.stmt = StmtKind::IF;
+	root->lineNo = pos->line;
+	
+	root->children[0] = if_clause();
+	root->children[1] = elif_clause_list();
+	root->children[2] = else_clause();
+
+	return root;
+}
+
+SharedTreeNode Parser::if_clause() {
+	auto root = make_shared<TreeNode>();
+	root->nodeKind = NodeKind::STMT;
+	root->kind.stmt = StmtKind::IF;
+	root->lineNo = pos->line;
+
+	if (pos->type != TokenType::IF) {
+		throw std::invalid_argument("IF expected");
+	}
+	pos++;
+	root->children[0] = expression();
+	if (pos->type != TokenType::COLON) {
+		throw std::invalid_argument("COLON expected");
+	}
+	pos++;
+	if (pos->type != TokenType::NEWLINE) {
+		throw std::invalid_argument("NEWLINE expected");
+	}
+	pos++;
+	root->children[1] = compound_stmt();
+	return root;
+}
+
+SharedTreeNode Parser::elif_clause_list() {
+	if (pos->type != TokenType::ELIF) {
+		return nullptr;
+	}
+		
+	auto root = make_shared<TreeNode>();
+	auto curStmtPos = &root->children[0];
+	while (pos != content.cend() && pos->type != TokenType::FEOF) {
+		*curStmtPos = elif_clause();
+		curStmtPos = &((*curStmtPos)->lSibling);
+		pos++;
+	}
+
+	
+}
+SharedTreeNode Parser::elif_clause()
+{
+	auto root = make_shared<TreeNode>();
+	root->nodeKind = NodeKind::STMT;
+	root->kind.stmt = StmtKind::ELIF;
+	root->lineNo = pos->line;
+	if (pos->type != TokenType::ELIF) {
+		throw std::invalid_argument("ELIF expected");
+	}
+	pos++;
+	root->children[0] = expression();
+	if (pos->type != TokenType::COLON) {
+		throw std::invalid_argument("COLON expected");
+	}
+	pos++;
+	if (pos->type != TokenType::NEWLINE) {
+		throw std::invalid_argument("NEWLINE expected");
+	}
+	pos++;
+	root->children[1] = compound_stmt();
+	return root;
+}
+
+SharedTreeNode Parser::else_clause()
+{
+	if (pos->type != TokenType::ELSE) {
+		return nullptr;
+	}
+
+	auto root = make_shared<TreeNode>();
+	root->nodeKind = NodeKind::STMT;
+	root->kind.stmt = StmtKind::ELSE;
+	root->lineNo = pos->line;
+
+	if (pos->type != TokenType::COLON) {
+		throw std::invalid_argument("COLON expected");
+	}
+	pos++;
+	if (pos->type != TokenType::NEWLINE) {
+		throw std::invalid_argument("NEWLINE expected");
+	}
+	pos++;
+	root->children[0] = compound_stmt();
+
+
+	return root;
+}
+
 SharedTreeNode Parser::return_stmt() {
 	auto root = make_shared<TreeNode>();
 	root->nodeKind = NodeKind::STMT;

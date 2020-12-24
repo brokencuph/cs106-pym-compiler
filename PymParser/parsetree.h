@@ -16,12 +16,12 @@ enum class NodeKind
 
 enum class StmtKind
 {
-	DEF, DECL, CMPD, IF, WHILE, RETURN, EXPR, ELIF, ELSE
+	DEF, DECL, CMPD, IFC,IF, WHILE, RETURN, EXPR, ELIF, ELSE
 };
 
 enum class ExprKind
 {
-	OP, NUM, STR, ID, CALL, ARRAY
+	OP, NUM, STR, ID, CALL, ARRAY,ARRAYC
 };
 
 enum class ParamKind
@@ -45,6 +45,7 @@ struct Rational
 	int num, den; // numerator and denominator
 	
 	static Rational parse(const std::string& str);
+	friend std::ostream& operator<<(std::ostream& os, const Rational& r);
 };
 
 struct TreeNode

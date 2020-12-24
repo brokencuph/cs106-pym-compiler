@@ -7,7 +7,7 @@ using namespace std::string_literals;
 
 int main()
 {
-	auto x = scanner("arrayMax.pym");
+	auto x = scanner("bubble_sort.pym");
 	auto sec_to_last = std::prev(x.end());
 	x.emplace(sec_to_last, TokenType::NEWLINE, ""s, sec_to_last->line);
 	for (auto it = x.begin(); it != x.end(); it++)
@@ -27,6 +27,7 @@ int main()
 	try
 	{
 		auto res = parser.parse();
+		std::cout << *res;
 	}
 	catch (const std::invalid_argument& e)
 	{

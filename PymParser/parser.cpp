@@ -90,7 +90,7 @@ std::pair<TokenType, int> Parser::interpret_type_with_extent()
 	if (pos->type != TokenType::INT && pos->type != TokenType::STR && pos->type != TokenType::NUM) {
 		throw std::invalid_argument("Type Name expected");
 	}
-	std::pair<TokenType, bool> p;
+	std::pair<TokenType, int> p;
 	p.first = pos->type;
 	p.second = -1;
 	pos++;
@@ -313,7 +313,7 @@ SharedTreeNode Parser::if_stmt() {
 SharedTreeNode Parser::if_clause() {
 	auto root = make_shared<TreeNode>();
 	root->nodeKind = NodeKind::STMT;
-	root->kind.stmt = StmtKind::IF;
+	root->kind.stmt = StmtKind::IFC;
 	root->lineNo = pos->line;
 
 	if (pos->type != TokenType::IF) {
@@ -563,6 +563,7 @@ SharedTreeNode Parser::expression()
 		auto node = make_shared<TreeNode>();
 		node->nodeKind = NodeKind::EXPR;
 		node->kind.expr = ExprKind::OP;
+		node->lineNo = pos->line;
 		node->attr.exprAttr.op = TokenType::ASSI;
 		node->children[0] = var();
 		
@@ -628,7 +629,7 @@ SharedTreeNode Parser::factor()
 	case TokenType::LBR:
 		res = make_shared<TreeNode>();
 		res->nodeKind = NodeKind::EXPR;
-		res->kind.expr = ExprKind::ARRAY;
+		res->kind.expr = ExprKind::ARRAYC;
 		res->lineNo = pos->line;
 		pos++;
 		res->children[0] = arg_list();
@@ -660,6 +661,7 @@ SharedTreeNode Parser::var()
 	if (pos->type == TokenType::LBR)
 	{
 		pos++;
+		root->kind.expr = ExprKind::ARRAY;
 		root->children[0] = expression();
 		if (pos->type != TokenType::RBR)
 		{

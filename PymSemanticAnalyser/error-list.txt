@@ -1,0 +1,30 @@
+In Pym, it is assumed that there is only two kinds of scopes:
+global scope (for global variables/functions) -or-
+function scope (for local variables/functions)
+which is similar to those of Python.
+
+Errors to be found:
+
+For a declaration or parameter of name x:
+1. x is already defined in current scope, with a static type or a function type.
+2. x is a function declaration with return type integer, but in its body there is a branch of execution that misses a statement of the form return exp, for some expression exp that has that type.
+
+For a reference of a name x:
+3. x is used as an ID (to be read), but the declaration of x cannot be found, or it is a function.
+4. x is used as a function name in a function call, but such a function declaration with the name x cannot be found.
+5. x is used as a function name (in a function call), but the number of arguments in the function call is different from the number of parameters in the function declaration.
+6. x is used as a function name (in a function call), but the type of an argument does not match the type of its corresponding parameter in the declaration of function x.
+
+For operators and expressions: (they should be in the following form, otherwise an error should be reported)
+array subscription: addr[int]
+sign: <sign>num
+* /: num <op> num
+%: int <op> int
++ -(binary): num <op> num
++(binary): str <op> str
+relational: num <op> num
+not: not int
+and or: int op int
+= (assignment):
+(1) if LHS is an statically typed ID expression or ARRAY expression, and there is a type mismatch between LHS and RHS, report an error;
+(2) if LHS is not an ID or ARRAY expression, report an error.

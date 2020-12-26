@@ -7,7 +7,7 @@ using namespace std::string_literals;
 
 int main()
 {
-	auto x = scanner("bubble_sort.pym");
+	auto x = scanner("pymtests\\sum100.pym");
 	auto sec_to_last = std::prev(x.end());
 	x.emplace(sec_to_last, TokenType::NEWLINE, ""s, sec_to_last->line);
 	for (auto it = x.begin(); it != x.end(); it++)
@@ -20,7 +20,8 @@ int main()
 		if (it->type == TokenType::NEWLINE && nit->type == TokenType::NEWLINE)
 		{
 			x.erase(nit, std::next(nit));
-			it--;
+			if (it != x.begin())
+				it--;
 		}
 	}
 	Parser parser(x);
@@ -31,7 +32,9 @@ int main()
 	}
 	catch (const std::invalid_argument& e)
 	{
-		std::cout << "parser error!\n" << e.what();
+		auto tok = parser.getCurrentToken();
+		std::cout << "Parser error! " << e.what() << std::endl;
+		std::cout << "When processing token: " << tok << std::endl;
 	}
 	return 0;
 }

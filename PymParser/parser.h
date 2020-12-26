@@ -83,6 +83,8 @@ public:
 	Parser(std::list<Token> tokenList);
 
 	SharedTreeNode parse();
+
+	Token getCurrentToken();
 };
 
 #endif

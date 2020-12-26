@@ -343,10 +343,10 @@ SharedTreeNode Parser::elif_clause_list() {
 	root->kind.list = ListKind::ELIF;
 	root->lineNo = pos->line;
 	auto curStmtPos = &root->children[0];
-	while (pos != content.cend() && pos->type != TokenType::FEOF) {
+	while (pos != content.cend() && pos->type == TokenType::ELIF) {
 		*curStmtPos = elif_clause();
 		curStmtPos = &((*curStmtPos)->rSibling);
-		pos++;
+		//pos++;
 	}
 	return root;
 	
@@ -384,7 +384,7 @@ SharedTreeNode Parser::else_clause()
 	root->nodeKind = NodeKind::STMT;
 	root->kind.stmt = StmtKind::ELSE;
 	root->lineNo = pos->line;
-
+	pos++;
 	if (pos->type != TokenType::COLON) {
 		throw std::invalid_argument("COLON expected");
 	}
@@ -728,4 +728,9 @@ SharedTreeNode Parser::param()
 
 	}
 	return root;
+}
+
+Token Parser::getCurrentToken()
+{
+	return *pos;
 }

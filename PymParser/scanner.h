@@ -5,6 +5,8 @@
 #include <string>
 #include "token.h"
 
+extern bool g_scannerError;
+
 std::list<Token> scanner(const char* fileName);
 
 #endif

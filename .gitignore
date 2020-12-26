@@ -343,3 +343,5 @@ healthchecksdb
 /PymScanner/pymscanner
 /PymScanner/scanner
 PymScanner/pymscanner.exe
+/PymParser/parser
+*.exe

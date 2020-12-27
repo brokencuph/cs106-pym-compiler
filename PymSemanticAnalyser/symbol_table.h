@@ -45,6 +45,7 @@ public:
 	TreeNode* tableNode;
 
 	// a tree-like structure
+	std::shared_ptr<SymbolTable>* nextAttachPoint;
 	std::shared_ptr<SymbolTable> lower, next;
 	std::weak_ptr<SymbolTable> upper, prev;
 

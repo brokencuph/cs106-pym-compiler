@@ -14,13 +14,13 @@ PymSymbol::PymSymbol(SymbolTable* p, TreeNode* dN)
 int SymbolTable::internal_id = 0;
 
 SymbolTable::SymbolTable(TreeNode* t)
-	: tableNode(t), id(internal_id++), upper(0), lower(0), prev(0), next(0)
+	: tableNode(t), id(internal_id++), lower(0), next(0),nextAttachPoint(&lower)
 {
 
 }
 
 SymbolTable::SymbolTable(TreeNode* t, int id)
-	: tableNode(t), id(id), upper(0), lower(0), prev(0), next(0)
+	: tableNode(t), id(id), lower(0), next(0),nextAttachPoint(&lower)
 {
 	SymbolTable::internal_id = id;
 }

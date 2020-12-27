@@ -36,8 +36,7 @@ enum class ListKind
 
 enum class ExprType
 {
-	TBD, INT, NUM, STRING,
-	
+	TBD, INT, NUM, STRING, ARRAY
 };
 
 struct Rational

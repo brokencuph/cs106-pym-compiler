@@ -31,7 +31,7 @@ static std::string listKindNames[] = {
 	"STMT", "PARAM", "ARG", "ELIF"
 };
 static std::string exprTypeNames[] = {
-	"TBD", "INT", "NUM", "STRING"
+	"TBD", "INT", "NUM", "STRING","ARRAY"
 };
 Rational Rational::parse(const std::string& str)
 {

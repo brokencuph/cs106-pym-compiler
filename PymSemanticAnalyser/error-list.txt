@@ -26,7 +26,7 @@ relational: num <op> num
 not: not int
 and or: int op int
 = (assignment):
-(1) if LHS is an statically typed ID expression or ARRAY expression, and there is a type mismatch between LHS and RHS, report an error;
-(2) if LHS is not an ID or ARRAY expression, report an error.
+if LHS is an statically typed ID expression or ARRAY expression, and there is a type mismatch between LHS and RHS, report an error;
+
 
 If a NUM whose denominator is not one is used as an INT, report an error.

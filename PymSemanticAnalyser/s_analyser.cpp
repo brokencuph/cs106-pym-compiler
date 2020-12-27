@@ -218,12 +218,23 @@ int SemanticAnalyser::assignTypes(TreeNode* tr)
 	case ExprKind::STR:
 		return int(tr->type = ExprType::STRING);
 	case ExprKind::ARRAYC:
-		return int(tr->type = ExprType::ARRAY);
-	case ExprKind::ID:
+		return int(tr->type = ExprType::ARRAY);	
 	case ExprKind::ARRAY:
+		if (res[0] != int(ExprType::INT) && res[0] != int(ExprType::TBD)) 
+		{
+			reportError(tr->lineNo, "Array subscript should be integer.");	
+		}
+		/*else if()
+		{
+
+		}*/
+	case ExprKind::ID:
 	case ExprKind::CALL:
 		return int(tr->type);
 	case ExprKind::OP:
+		if (res[0] == int(ExprType::TBD) || res[1] == int(ExprType::TBD)) {
+			return int(tr->type = ExprType::TBD);
+		}
 		switch (tr->attr.exprAttr.op)
 		{
 		case TokenType::MUL:
@@ -361,7 +372,27 @@ int SemanticAnalyser::assignTypes(TreeNode* tr)
 				}
 
 			}
-
+		case TokenType::ASSI:
+			if (res[0] == int(ExprType::INT) && res[1] == int(ExprType::INT)) {
+				return int(tr->type = ExprType::INT);
+			}
+			else if (res[0] == int(ExprType::NUM) && res[1] == int(ExprType::NUM)) {
+				return int(tr->type = ExprType::NUM);
+			}
+			else if (res[0] == int(ExprType::STRING) && res[1] == int(ExprType::STRING)) {
+				return int(tr->type = ExprType::STRING);
+			}
+			else if (res[0] == int(ExprType::ARRAY) && res[1] == int(ExprType::ARRAY)) {
+				return int(tr->type = ExprType::ARRAY);
+			}
+			else if (res[0] == int(ExprType::NUM) && res[1] == int(ExprType::INT)) {
+				return int(tr->type = ExprType::NUM);
+			}
+			else 
+			{
+				reportError(tr->lineNo, "Assignment type mismatch.");
+				return -1;
+			}
 		default:
 			break;
 		}

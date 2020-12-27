@@ -5,7 +5,7 @@
 #include "utils.h"
 #include "parsetree.h"
 
-using SharedTreeNode = std::shared_ptr<TreeNode>;
+
 
 class Parser
 {

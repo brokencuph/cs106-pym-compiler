@@ -84,6 +84,6 @@ struct TreeNode
 	friend std::ostream& operator<<(std::ostream& os, const TreeNode& t);
 };
 
-
+using SharedTreeNode = std::shared_ptr<TreeNode>;
 
 #endif

@@ -105,11 +105,6 @@ TreeNode::~TreeNode()
 			break;
 		}
 	}
-	if (something)
-	{
-		delete something;
-		something = nullptr;
-	}
 }
 
 std::ostream& operator<<(std::ostream& os, const Rational& r)
@@ -148,6 +143,7 @@ std::ostream& operator<<(std::ostream& os, const TreeNode& t)
 		default:
 			break;
 		}
+		os << '<' << exprTypeNames[(int)t.type] << "> ";
 		break;
 	case NodeKind::STMT	:
 		os << stmtKindNames[(int)t.kind.stmt] << " ";

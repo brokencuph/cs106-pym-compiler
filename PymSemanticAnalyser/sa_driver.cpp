@@ -58,10 +58,26 @@ void run_scanner_and_parser(const char* fileName)
 		std::cout << "When processing token: " << tok << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	std::cout << "Parser succeeds!\n\n";
 	SemanticAnalyser sa(res.get());
-	std::cout << *sa.getSymbolTable();
+	auto symtable = sa.getSymbolTable();
+	if (!sa.error())
+	{
+		std::cout << "Symbol table:\n";
+		symtable->print_table();
+		std::cout << '\n';
+	}
+	else
+	{
+		std::cout << "Error occurs when producing symbol table.\n";
+		exit(EXIT_FAILURE);
+	}
 	sa.assignTypes();
-	std::cout << res;
+	if (sa.error())
+	{
+		std::cout << "Error occurs when assigning type information.\n";
+	}
+	std::cout << "Christmas Tree:\n" << *res;
 }
 
 int main(int argc, char** argv)

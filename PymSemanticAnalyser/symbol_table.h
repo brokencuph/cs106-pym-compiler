@@ -65,7 +65,8 @@ public:
 
 	bool check_local(const std::string& name);
 
-	friend std::ostream& operator<<(std::ostream& os, const SymbolTable& st);
+	void print_table();
+	//friend std::ostream& operator<<(std::ostream& os, const SymbolTable& st);
 };
 
 using SharedSymbolTable = std::shared_ptr<SymbolTable>;

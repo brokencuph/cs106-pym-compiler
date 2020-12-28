@@ -9,6 +9,8 @@ class SemanticAnalyser
 private:
 	TreeNode* parseTree; // this will be modified by Analyser
 	SharedSymbolTable symTable;
+
+	bool _error = false;
 	
 	SharedSymbolTable genSymbolTableTop();
 
@@ -24,6 +26,8 @@ public:
 
 	SharedSymbolTable getSymbolTable();
 	void assignTypes();
+
+	bool error();
 
 };
 

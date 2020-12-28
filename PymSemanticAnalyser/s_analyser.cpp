@@ -10,11 +10,13 @@ using std::make_shared;
 void SemanticAnalyser::reportError(int lineNo, const char* msg)
 {
 	fprintf(stderr, "Line %d:\x001b[31mERROR\x001b[0m: %s\n", lineNo, msg);
+	_error = true;
 }
 
 void SemanticAnalyser::reportError(int lineNo, const std::string &msg)
 {
 	fprintf(stderr, "Line %d:\x001b[31mERROR\x001b[0m: %s\n", lineNo, msg.c_str());
+	_error = true;
 }
 
 static SharedTreeNode genParamListNode(const char* paramName, ExprType paramType)
@@ -48,6 +50,14 @@ static SharedTreeNode genFuncNode(const char* funcName, const char* paramName, E
 	root->attr.dclAttr = { retType, false, name, 0 };
 	if (pnum)
 		root->children[0] = genParamListNode(paramName, paramType);
+	else
+	{
+		auto paramList = make_shared<TreeNode>();
+		paramList->nodeKind = NodeKind::LIST;
+		paramList->kind.list = ListKind::PARAM;
+		paramList->lineNo = 0;
+		root->children[0] = paramList;
+	}
 
 	return root;
 }
@@ -57,8 +67,8 @@ SharedSymbolTable SemanticAnalyser::genSymbolTableTop()
 	static const SharedTreeNode internalFuncs[] = {
 		genFuncNode("printnum", "number", ExprType::NUM, ExprType::TBD),
 		genFuncNode("printstr", "str", ExprType::STRING, ExprType::TBD),
-		genFuncNode<0>("inputnum", "", ExprType::TBD, ExprType::TBD),
-		genFuncNode<0>("inputstr", "", ExprType::TBD, ExprType::TBD),
+		genFuncNode<0>("inputnum", "", ExprType::TBD, ExprType::NUM),
+		genFuncNode<0>("inputstr", "", ExprType::TBD, ExprType::STRING),
 		genFuncNode("str2num", "str", ExprType::STRING, ExprType::NUM),
 		genFuncNode("num2str", "num", ExprType::NUM, ExprType::STRING),
 		genFuncNode("sign", "num", ExprType::NUM, ExprType::STRING),
@@ -100,9 +110,9 @@ void SemanticAnalyser::genSymbolTable(TreeNode* tr, SharedSymbolTable st)
 			}
 			st->emplace_symbol(std::string(tr->attr.dclAttr.name), tr);
 			auto lowerTable = make_shared<SymbolTable>(tr);
+			lowerTable->upper = st;
 			genSymbolTable(tr->children[0].get(), lowerTable);
 			genSymbolTable(tr->children[1].get(), lowerTable);
-			lowerTable->upper = st;
 			*st->nextAttachPoint = lowerTable;
 			st->nextAttachPoint = &lowerTable->next;
 			if (tr->rSibling) 
@@ -133,7 +143,7 @@ void SemanticAnalyser::genSymbolTable(TreeNode* tr, SharedSymbolTable st)
 				{
 					if (!st->check_local(tr->children[0]->attr.exprAttr.id))
 					{
-						st->emplace_symbol(std::string(tr->children[0]->attr.exprAttr.id),tr);
+						st->emplace_symbol(std::string(tr->children[0]->attr.exprAttr.id),tr->children[0].get());
 					}
 				}
 				else if(tr->children[0]->kind.expr == ExprKind::ARRAY)
@@ -156,31 +166,41 @@ void SemanticAnalyser::genSymbolTable(TreeNode* tr, SharedSymbolTable st)
 			try
 			{
 				PymSymbol& sym = st->lookup(tr->attr.exprAttr.id);
-				const auto isFunc = (sym.declNode->nodeKind == NodeKind::STMT
-					&& sym.declNode->kind.stmt == StmtKind::DEF);
-				const auto isArray = (sym.declNode->attr.dclAttr.isAddr == true);
-				if (tr->kind.expr == ExprKind::ID && isFunc)
+				if (sym.declNode->nodeKind == NodeKind::EXPR)
 				{
-					throw std::invalid_argument("Function "s + tr->attr.exprAttr.id + "cannot be used directly."s);
-				}
-				else if (tr->kind.expr == ExprKind::ARRAY && !isArray)
-				{
-					throw std::invalid_argument(tr->attr.exprAttr.id + " is not an array."s);
-				}
-				else if (tr->kind.expr == ExprKind::CALL && !isFunc)
-				{
-					throw std::invalid_argument(tr->attr.exprAttr.id + " cannot be called."s);
-				}
-				if (tr->kind.expr == ExprKind::ID && isArray)
-				{
-					tr->type = ExprType::ARRAY;
+					tr->type = ExprType::TBD;
+					tr->something = sym.declNode;
+					sym.emplace_ref(tr);
 				}
 				else
 				{
-					tr->type = sym.declNode->attr.dclAttr.type;
+					const auto isFunc = (sym.declNode->nodeKind == NodeKind::STMT
+						&& sym.declNode->kind.stmt == StmtKind::DEF);
+					const auto isArray = (sym.declNode->attr.dclAttr.isAddr == true);
+					const auto notTbd = (sym.declNode->attr.dclAttr.type != ExprType::TBD);
+					if (tr->kind.expr == ExprKind::ID && isFunc)
+					{
+						throw std::invalid_argument("Function "s + tr->attr.exprAttr.id + " cannot be used directly."s);
+					}
+					else if (tr->kind.expr == ExprKind::ARRAY && !isArray && notTbd)
+					{
+						throw std::invalid_argument(tr->attr.exprAttr.id + " is not an array."s);
+					}
+					else if (tr->kind.expr == ExprKind::CALL && !isFunc)
+					{
+						throw std::invalid_argument(tr->attr.exprAttr.id + " cannot be called."s);
+					}
+					if (tr->kind.expr == ExprKind::ID && isArray)
+					{
+						tr->type = ExprType::ARRAY;
+					}
+					else
+					{
+						tr->type = sym.declNode->attr.dclAttr.type;
+					}
+					tr->something = sym.declNode; // record the declaration node of this access, for post-order use
+					sym.emplace_ref(tr);
 				}
-				tr->something = sym.declNode; // record the declaration node of this access, for post-order use
-				sym.emplace_ref(tr);
 			}
 			catch (const std::invalid_argument& e)
 			{
@@ -215,7 +235,10 @@ int SemanticAnalyser::assignTypes(TreeNode* tr)
 	std::transform(tr->children, tr->children + MAX_CHILDREN, res, [this](const SharedTreeNode& x) {
 		return x ? assignTypes(x.get()) : -2;
 		});
-	assignTypes(tr->rSibling.get());
+	if (tr->rSibling)
+	{
+		assignTypes(tr->rSibling.get());
+	}
 	if (tr->nodeKind != NodeKind::EXPR)
 	{
 		return -1;
@@ -253,13 +276,14 @@ int SemanticAnalyser::assignTypes(TreeNode* tr)
 				while (p_param && p_arg)
 				{
 					if (!(p_param->attr.dclAttr.isAddr && p_arg->type == ExprType::ARRAY
-						|| !p_param->attr.dclAttr.isAddr && p_arg->type == p_param->attr.dclAttr.type))
+						|| !p_param->attr.dclAttr.isAddr && (p_arg->type == p_param->attr.dclAttr.type || p_arg->type == ExprType::INT && p_param->attr.dclAttr.type == ExprType::NUM)
+						|| p_param->attr.dclAttr.type == ExprType::TBD || p_arg->type == ExprType::TBD))
 					{
 						reportError(tr->lineNo, "Argument type mismatch on position " + std::to_string(cnt) + ".");
 					}
 					cnt++;
-					p_param++;
-					p_arg++;
+					p_param = p_param->rSibling.get();
+					p_arg = p_arg->rSibling.get();
 				}
 				if (p_param && !p_arg || !p_param && p_arg)
 				{
@@ -268,7 +292,7 @@ int SemanticAnalyser::assignTypes(TreeNode* tr)
 			}
 			catch (const std::exception& e)
 			{
-				reportError(tr->lineNo, "Internal parse tree error.");
+				reportError(tr->lineNo, "Internal parse tree error: "s + e.what());
 			}
 		}
 		return int(tr->type);
@@ -441,6 +465,7 @@ int SemanticAnalyser::assignTypes(TreeNode* tr)
 		default:
 			break;
 		}
+		break;
 	default:
 		break;
 	}
@@ -465,4 +490,9 @@ SharedSymbolTable SemanticAnalyser::getSymbolTable()
 void SemanticAnalyser::assignTypes()
 {
 	assignTypes(parseTree);
+}
+
+bool SemanticAnalyser::error()
+{
+	return _error;
 }

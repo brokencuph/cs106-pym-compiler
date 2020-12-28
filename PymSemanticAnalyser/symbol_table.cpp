@@ -46,3 +46,8 @@ bool SymbolTable::check_local(const std::string& name)
 {
 	return hashTable.find(name) != hashTable.end();
 }
+
+std::ostream& operator<<(std::ostream& os, const SymbolTable& st)
+{
+	return os;
+}

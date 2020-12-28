@@ -32,7 +32,7 @@ struct PymSymbol
 	template <class... Types>
 	void emplace_ref(Types... args)
 	{
-		refs.emplace_back(this, std::forward(args)...);
+		refs.emplace_back(this, std::forward<Types>(args)...);
 	}
 };
 
@@ -58,12 +58,14 @@ public:
 	template <class... Types>
 	void emplace_symbol(const std::string& name, Types... args)
 	{
-		hashTable.emplace(name, PymSymbol(this, std::forward(args)...));
+		hashTable.emplace(name, PymSymbol(this, std::forward<Types>(args)...));
 	}
 
 	PymSymbol& lookup(const std::string& name);
 
 	bool check_local(const std::string& name);
+
+	friend std::ostream& operator<<(std::ostream& os, const SymbolTable& st);
 };
 
 using SharedSymbolTable = std::shared_ptr<SymbolTable>;

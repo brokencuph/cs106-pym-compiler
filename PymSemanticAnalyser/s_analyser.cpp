@@ -1,6 +1,6 @@
 #include <cstring>
 #include <stdexcept>
-#include<algorithm>
+#include <algorithm>
 #include "s_analyser.h"
 
 using namespace std::string_literals;
@@ -93,6 +93,12 @@ void SemanticAnalyser::genSymbolTable(TreeNode* tr, SharedSymbolTable st)
 		}
 		else if (tr->kind.stmt == StmtKind::DEF)
 		{
+			if (st->check_local(tr->attr.dclAttr.name))
+			{
+				reportError(tr->lineNo, "Redeclaration of function "s + tr->attr.dclAttr.name);
+				return;
+			}
+			st->emplace_symbol(std::string(tr->attr.dclAttr.name), tr);
 			auto lowerTable = make_shared<SymbolTable>(tr);
 			genSymbolTable(tr->children[0].get(), lowerTable);
 			genSymbolTable(tr->children[1].get(), lowerTable);
@@ -165,7 +171,15 @@ void SemanticAnalyser::genSymbolTable(TreeNode* tr, SharedSymbolTable st)
 				{
 					throw std::invalid_argument(tr->attr.exprAttr.id + " cannot be called."s);
 				}
-				tr->type = sym.declNode->attr.dclAttr.type;
+				if (tr->kind.expr == ExprKind::ID && isArray)
+				{
+					tr->type = ExprType::ARRAY;
+				}
+				else
+				{
+					tr->type = sym.declNode->attr.dclAttr.type;
+				}
+				tr->something = sym.declNode; // record the declaration node of this access, for post-order use
 				sym.emplace_ref(tr);
 			}
 			catch (const std::invalid_argument& e)
@@ -224,12 +238,39 @@ int SemanticAnalyser::assignTypes(TreeNode* tr)
 		{
 			reportError(tr->lineNo, "Array subscript should be integer.");	
 		}
-		/*else if()
-		{
-
-		}*/
+		return int(tr->type);
 	case ExprKind::ID:
+		return int(tr->type);
 	case ExprKind::CALL:
+		if (tr->something)
+		{
+			try
+			{
+				TreeNode* defTr = reinterpret_cast<TreeNode*>(tr->something);
+				TreeNode* p_param = defTr->children[0]->children[0].get();
+				TreeNode* p_arg = tr->children[0]->children[0].get();
+				int cnt = 0;
+				while (p_param && p_arg)
+				{
+					if (!(p_param->attr.dclAttr.isAddr && p_arg->type == ExprType::ARRAY
+						|| !p_param->attr.dclAttr.isAddr && p_arg->type == p_param->attr.dclAttr.type))
+					{
+						reportError(tr->lineNo, "Argument type mismatch on position " + std::to_string(cnt) + ".");
+					}
+					cnt++;
+					p_param++;
+					p_arg++;
+				}
+				if (p_param && !p_arg || !p_param && p_arg)
+				{
+					reportError(tr->lineNo, "Wrong argument number.");
+				}
+			}
+			catch (const std::exception& e)
+			{
+				reportError(tr->lineNo, "Internal parse tree error.");
+			}
+		}
 		return int(tr->type);
 	case ExprKind::OP:
 		if (res[0] == int(ExprType::TBD) || res[1] == int(ExprType::TBD)) {
@@ -263,7 +304,7 @@ int SemanticAnalyser::assignTypes(TreeNode* tr)
 			if (res[0] != int(ExprType::NUM) && res[0] != int(ExprType::INT) ||
 				res[1] != int(ExprType::NUM) && res[1] != int(ExprType::INT))
 			{
-				reportError(tr->lineNo, "Type mismatch for multiplication/division.");
+				reportError(tr->lineNo, "Operand type mismatch.");
 				return -1;
 			}
 			else
@@ -388,6 +429,10 @@ int SemanticAnalyser::assignTypes(TreeNode* tr)
 			else if (res[0] == int(ExprType::NUM) && res[1] == int(ExprType::INT)) {
 				return int(tr->type = ExprType::NUM);
 			}
+			else if (res[0] == int(ExprType::ARRAY) && res[1] == int(ExprType::ARRAY))
+			{
+				return int(tr->type = ExprType::ARRAY);
+			}
 			else 
 			{
 				reportError(tr->lineNo, "Assignment type mismatch.");
@@ -399,7 +444,7 @@ int SemanticAnalyser::assignTypes(TreeNode* tr)
 	default:
 		break;
 	}
-	return 0;
+	return -1;
 }
 
 SemanticAnalyser::SemanticAnalyser(TreeNode* t)

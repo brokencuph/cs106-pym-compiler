@@ -48,7 +48,7 @@ static SharedTreeNode genFuncNode(const char* funcName, const char* paramName, E
 	char* name = new char[strlen(funcName) + 1];
 	strcpy(name, funcName);
 	root->attr.dclAttr = { retType, false, name, 0 };
-	if (pnum)
+	if constexpr (pnum)
 		root->children[0] = genParamListNode(paramName, paramType);
 	else
 	{

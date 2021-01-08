@@ -6,8 +6,8 @@ Author: HE YUJIE, 1809853J-I011-0065
 
 ## Introduction
 
-This program includes a semantic analyser and previous framework programming. The computation is based on a
-parse tree that is provided by a parser, which demonstrate some idea of the semantic analyzer, to embellish the tree with more particles (more data like info of types and symbol tables).
+This program includes a semantic analyser and its supporters (scanner and parser). The computation is to embellish the tree with more particles (more data like info of types and symbols) based on a
+parse tree that is provided by a parser.
 
 A symbol table is a data structure used by a language translator such as a compiler or interpreter, where each identifier in a program's source code is associated with information relating to its declaration or appearance in the source. In other words, the entries of a symbol table store the information related to the entry's corresponding symbol.
 
@@ -16,11 +16,11 @@ A symbol table is a data structure used by a language translator such as a compi
 This program is intended to compile using compilers supporting **ISO C++17** language features and libraries. We tested compilation using `cl` (Microsoft C++ Compiler for x64 version 19.28.29335, shipped with VS 2019 ) and `g++` (GNU C++ Compiler version 9.3.0), with commands like below:
 
 ```code
-cl /EHsc /Feparser /O2 /std:c++17 dfa.cpp parser.cpp parsetree.cpp scanner.cpp token.cpp utils.cpp s_analyser.cpp symbol_table.cpp sa_driver.cpp
+cl /EHsc /Fesanalyser /O2 /std:c++17 dfa.cpp parser.cpp parsetree.cpp scanner.cpp token.cpp utils.cpp s_analyser.cpp symbol_table.cpp sa_driver.cpp
 ```
 
 ```code
-g++ -std=c++17 -O2 -o parser dfa.cpp parser.cpp parsetree.cpp scanner.cpp token.cpp utils.cpp s_analyser.cpp symbol_table.cpp sa_driver.cpp
+g++ -std=c++17 -O2 -o sanalyser dfa.cpp parser.cpp parsetree.cpp scanner.cpp token.cpp utils.cpp s_analyser.cpp symbol_table.cpp sa_driver.cpp
 ```
 
 Any recent version of C++ compiler could also be used.
@@ -45,7 +45,9 @@ The specific codes of this module can be seen in `./symbol_table.cpp` and `symbo
 
 Totally, this part can realize numerous function which includes scanning and parsing in pretreatment before processing symbol table.
 
-In the sample of symbol table, the main information will be listed including the *symbol table ID*, *element name*, *element kind*, *line number of declaration*, *line number of reference*. Besides, if declaring a parameter or variable name, the table will show its type like `<NUM>`. And `Dcl line` printing 0 and `Kind` printing "*FUNC*" means this declaration is a built-in function of Pym.(To find more built-in functions you can refer file `Pym language v2.pdf`).
+In the sample of symbol table, the main information will be listed including the *symbol table ID*, *element name*, *element kind*, *line number of declaration*, *line number of reference*. Besides, if declaring a parameter or variable name, the table will show its type like `<NUM>`. And `Dcl line` printing 0 and `Kind` printing "*FUNC*" means this declaration is a built-in function of Pym.(To find more built-in functions you can refer to file `Pym language v2.pdf`).
+
+As Pym supports use of a variable with direct assignment, such as *x = 5*, we cannot fix types of some expression, since the type of *x* is determined only at run-time, and may be changed by later assignments. For expression involving this kind of *dynamic variable* we all assign type *TBD* and ignore some rules for type matching.
 
 Furthermore, we add some codes in `./sa_driver.cpp`(main function) to add **NEWLINE** before **FEOF**
 and remove continuous duplicate **NEWLINE** as a processor between pure scanner and parser.
